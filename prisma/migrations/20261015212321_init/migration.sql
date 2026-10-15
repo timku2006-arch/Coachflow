@@ -224,8 +224,22 @@ ALTER TABLE "SessionResult" ADD CONSTRAINT "SessionResult_exerciseId_fkey" FOREI
 ALTER TABLE "NutritionTargets" ADD CONSTRAINT "NutritionTargets_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "ClientProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Тренер не может иметь пересекающиеся активные занятия (защита от гонок на уровне БД).
-CREATE EXTENSION IF NOT EXISTS btree_gist;
-ALTER TABLE "Session" ADD CONSTRAINT "Session_no_overlap"
-  EXCLUDE USING gist ("trainerId" WITH =, tstzrange("startsAt", "endsAt", '[)') WITH &&)
-  WHERE ("status" <> 'CANCELLED');
+-- Если хостинг не даёт включить btree_gist, ограничение пропускается:
+-- пересечения всё равно проверяет сервис (src/server/services/sessions.ts).
+DO $$
+BEGIN
+  CREATE EXTENSION IF NOT EXISTS btree_gist;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'btree_gist недоступен: %', SQLERRM;
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'btree_gist') THEN
+    ALTER TABLE "Session" ADD CONSTRAINT "Session_no_overlap"
+      EXCLUDE USING gist ("trainerId" WITH =, tstzrange("startsAt", "endsAt", '[)') WITH &&)
+      WHERE ("status" <> 'CANCELLED');
+  END IF;
+END $$;
+
 ALTER TABLE "Session" ADD CONSTRAINT "Session_time_order" CHECK ("endsAt" > "startsAt");
