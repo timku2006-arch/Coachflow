@@ -1,0 +1,180 @@
+// CoachFlow — модель данных.
+// Все даты/время хранятся в UTC (timestamptz); отображение — в Europe/Moscow.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TRAINER
+  CLIENT
+}
+
+enum SessionStatus {
+  SCHEDULED // запланировано (после начала — ждёт заполнения результатов)
+  COMPLETED // проведено, результаты внесены
+  CANCELLED // отменено
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  passwordHash       String
+  name               String
+  role               Role
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @db.Timestamptz(3)
+
+  trainerProfile TrainerProfile?
+  clientProfile  ClientProfile?
+}
+
+model TrainerProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  telegramUsername String?
+
+  clients   ClientProfile[]
+  exercises Exercise[]
+  sessions  Session[]
+}
+
+model ClientProfile {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Restrict)
+  heightCm  Int?
+  goal      String?
+  createdAt DateTime       @default(now()) @db.Timestamptz(3)
+
+  bodyWeights BodyWeightEntry[]
+  programs    Program[]
+  sessions    Session[]
+  notes       ClientNote[]
+  nutrition   NutritionTargets?
+
+  @@index([trainerId])
+}
+
+model BodyWeightEntry {
+  id       String        @id @default(cuid())
+  clientId String
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  date     DateTime      @db.Date // календарная дата (по Москве)
+  weightKg Float
+
+  @@unique([clientId, date])
+}
+
+// Заметки тренера по клиенту (клиенту не показываются)
+model ClientNote {
+  id        String        @id @default(cuid())
+  clientId  String
+  client    ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([clientId, createdAt])
+}
+
+// Справочник упражнений тренера
+model Exercise {
+  id        String         @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  name      String
+
+  programItems ProgramExercise[]
+  results      SessionResult[]
+
+  @@unique([trainerId, name])
+}
+
+model Program {
+  id          String        @id @default(cuid())
+  clientId    String
+  client      ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isActive    Boolean       @default(false) // у клиента одна текущая программа
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
+
+  exercises ProgramExercise[]
+
+  @@index([clientId])
+}
+
+model ProgramExercise {
+  id         String   @id @default(cuid())
+  programId  String
+  program    Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  dayLabel   String?  // например «День A»
+  position   Int
+  sets       Int
+  reps       String   // «8–10», «12», «до отказа»
+  weightKg   Float?
+  notes      String?
+
+  @@index([programId, position])
+}
+
+// Запись в календаре. После начала превращается в карточку результатов.
+model Session {
+  id          String         @id @default(cuid())
+  trainerId   String
+  trainer     TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  startsAt    DateTime       @db.Timestamptz(3)
+  endsAt      DateTime       @db.Timestamptz(3)
+  status      SessionStatus  @default(SCHEDULED)
+  notes       String?        // заметка тренера по тренировке
+  createdById String
+  cancelledAt DateTime?      @db.Timestamptz(3)
+  cancelledById String?
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
+
+  results SessionResult[]
+
+  @@index([trainerId, startsAt])
+  @@index([clientId, startsAt])
+}
+
+// Один выполненный подход
+model SessionResult {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  setNumber  Int
+  weightKg   Float
+  reps       Int
+
+  @@index([sessionId])
+  @@index([exerciseId])
+}
+
+model NutritionTargets {
+  id        String        @id @default(cuid())
+  clientId  String        @unique
+  client    ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  calories  Int
+  proteinG  Int
+  fatG      Int
+  carbsG    Int
+  updatedAt DateTime      @updatedAt @db.Timestamptz(3)
+}
