@@ -11,9 +11,9 @@ export default async function ChangePasswordPage() {
   const user = await requireUser();
   return (
     <>
-      <h1 className="mb-1 text-lg font-semibold">Смена пароля</h1>
+      <h1 className="mb-1 text-xl font-extrabold tracking-tight">Смена пароля</h1>
       {user.mustChangePassword && (
-        <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="mb-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           Пароль был выдан тренером. Придумайте свой, чтобы продолжить.
         </p>
       )}
@@ -30,7 +30,7 @@ export default async function ChangePasswordPage() {
         <SubmitButton className="w-full">Сохранить</SubmitButton>
       </ActionForm>
       {!user.mustChangePassword && (
-        <Link href={homeFor(user.role)} className="mt-4 block text-center text-sm text-slate-500 hover:underline">
+        <Link href={homeFor(user.role)} className="mt-4 block text-center text-sm text-muted hover:underline">
           Назад
         </Link>
       )}

@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { ActionForm, SubmitButton, buttonClass } from "./form";
 import { saveResultsAction } from "@/app/actions/sessions";
+import { Copy, Plus, X } from "lucide-react";
+import { inputClass } from "./input-class";
+
+const num =
+  "rounded-xl border border-line-strong bg-subtle px-2 py-2 text-center text-base font-bold text-ink outline-none transition focus:border-brand-500 focus:bg-surface focus:ring-4 focus:ring-brand-100 sm:text-sm";
 
 export type EditorSet = { exerciseId: string; weightKg: string; reps: string };
 type Exercise = { id: string; name: string };
@@ -54,39 +59,39 @@ export function ResultsEditor({
   return (
     <ActionForm action={saveResultsAction.bind(null, sessionId)}>
       <input type="hidden" name="results" value={JSON.stringify({ notes, sets })} />
-      {sets.length === 0 && <p className="text-sm text-slate-500">Добавьте упражнения, выполненные на тренировке.</p>}
+      {sets.length === 0 && <p className="text-sm text-muted">Добавьте упражнения, выполненные на тренировке.</p>}
       <ul className="space-y-2">
         {sets.map((s, i) => {
           const first = i === 0 || sets[i - 1].exerciseId !== s.exerciseId;
           return (
-            <li key={i} className={first ? "pt-2" : ""}>
-              {first && <div className="mb-1 text-sm font-semibold">{name(s.exerciseId)}</div>}
+            <li key={i} className={first ? "animate-rise pt-3" : "animate-rise"}>
+              {first && <div className="mb-1.5 text-sm font-extrabold">{name(s.exerciseId)}</div>}
               <div className="flex items-center gap-2">
-                <span className="w-6 shrink-0 text-right text-xs text-slate-400">{numbered[i]}.</span>
+                <span className="w-6 shrink-0 text-right text-xs text-muted">{numbered[i]}.</span>
                 <input
                   aria-label="Вес, кг"
                   inputMode="decimal"
                   placeholder="кг"
                   value={s.weightKg}
                   onChange={(e) => update(i, { weightKg: e.target.value.replace(",", ".") })}
-                  className="w-20 rounded-lg border border-slate-300 px-2 py-2 text-base sm:text-sm"
+                  className={`w-20 ${num}`}
                   required
                 />
-                <span className="text-slate-400">×</span>
+                <span className="text-muted">×</span>
                 <input
                   aria-label="Повторения"
                   inputMode="numeric"
                   placeholder="повт."
                   value={s.reps}
                   onChange={(e) => update(i, { reps: e.target.value })}
-                  className="w-16 rounded-lg border border-slate-300 px-2 py-2 text-base sm:text-sm"
+                  className={`w-16 ${num}`}
                   required
                 />
-                <button type="button" onClick={() => addSetAfter(i)} className="rounded-lg px-2 py-1 text-xs text-brand-700 hover:bg-brand-50" title="Добавить подход">
-                  + подход
+                <button type="button" onClick={() => addSetAfter(i)} className="flex items-center gap-1 rounded-xl px-2 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 active:scale-95" title="Повторить подход">
+                  <Copy size={13} /> подход
                 </button>
-                <button type="button" onClick={() => remove(i)} className="ml-auto rounded-lg px-2 py-1 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Удалить подход">
-                  ✕
+                <button type="button" onClick={() => remove(i)} className="ml-auto flex h-8 w-8 items-center justify-center rounded-xl text-muted transition hover:bg-red-50 hover:text-red-600 active:scale-90" aria-label="Удалить подход">
+                  <X size={16} />
                 </button>
               </div>
             </li>
@@ -94,7 +99,7 @@ export function ResultsEditor({
         })}
       </ul>
       <div className="flex gap-2">
-        <select value={newExercise} onChange={(e) => setNewExercise(e.target.value)} className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm">
+        <select value={newExercise} onChange={(e) => setNewExercise(e.target.value)} className={`min-w-0 flex-1 ${inputClass}`}>
           <option value="">Добавить упражнение…</option>
           {exercises.map((e) => (
             <option key={e.id} value={e.id}>
@@ -103,12 +108,12 @@ export function ResultsEditor({
           ))}
         </select>
         <button type="button" onClick={addExercise} className={buttonClass("secondary")} disabled={!newExercise}>
-          Добавить
+          <Plus size={16} /> Добавить
         </button>
       </div>
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Заметка по тренировке</span>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm" />
+        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">Заметка по тренировке</span>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className="w-full rounded-xl border border-line-strong px-3 py-2 text-base sm:text-sm" />
       </label>
       <SubmitButton className="w-full sm:w-auto">{completed ? "Сохранить изменения" : "Сохранить результаты"}</SubmitButton>
     </ActionForm>

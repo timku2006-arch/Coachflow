@@ -11,7 +11,7 @@ export default async function RegisterPage() {
   const hasTrainer = (await prisma.trainerProfile.count()) > 0;
   if (hasTrainer)
     return (
-      <div className="space-y-4 text-sm text-slate-600">
+      <div className="space-y-4 text-sm text-ink-2">
         <p>Тренер уже зарегистрирован. Клиентов создаёт тренер в своём кабинете.</p>
         <Link href="/login" className="font-medium text-brand-700 hover:underline">
           Перейти ко входу
@@ -20,8 +20,8 @@ export default async function RegisterPage() {
     );
   return (
     <>
-      <h1 className="mb-1 text-lg font-semibold">Регистрация тренера</h1>
-      <p className="mb-4 text-sm text-slate-500">Клиенты получат доступ от вас — их регистрировать не нужно.</p>
+      <h1 className="mb-1 text-xl font-extrabold tracking-tight">Регистрация тренера</h1>
+      <p className="mb-4 text-sm text-muted">Клиенты получат доступ от вас — их регистрировать не нужно.</p>
       <ActionForm action={registerTrainerAction}>
         <Field label="Имя">
           <Input name="name" autoComplete="name" required maxLength={100} />

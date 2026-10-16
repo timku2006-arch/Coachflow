@@ -6,13 +6,15 @@ import { getSession } from "@/server/services/sessions";
 import { listExercises } from "@/server/services/exercises";
 import { getActiveProgram } from "@/server/services/programs";
 import { telegramLink } from "@/lib/booking-rules";
-import { formatDateTime, formatTime, moscowDateString, moscowTimeString } from "@/lib/time";
+import { formatDate, formatDateTime, formatTime, moscowDateString, moscowTimeString, relativeDayLabel } from "@/lib/time";
 import { canEnterResults } from "@/lib/session-phase";
-import { Card, PageHeader, PhaseBadge } from "./ui";
+import { Avatar, Card, Notice, PhaseBadge } from "./ui";
+import { CalendarClock, Dumbbell } from "lucide-react";
 import { ResultsList } from "./results-list";
 import { SessionActions } from "./session-actions";
 import { ResultsEditor, type EditorSet } from "./results-editor";
 import { ActionForm, SubmitButton } from "./form";
+import { inputClass } from "./input-class";
 import { updateSessionNotesAction } from "@/app/actions/sessions";
 
 /** Карточка записи: расписание и результаты в одной цепочке. */
@@ -51,26 +53,40 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
   const trainerProfile = await prisma.trainerProfile.findUnique({ where: { id: s.trainerId }, select: { telegramUsername: true } });
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={isTrainer ? s.client.user.name : "Занятие"}
-        subtitle={
-          <>
-            {formatDateTime(s.startsAt)}–{formatTime(s.endsAt)} (МСК) · <PhaseBadge phase={s.phase} />
-          </>
-        }
-        action={
-          isTrainer ? (
-            <Link href={`/trainer/clients/${s.clientId}`} className="text-sm text-brand-700 hover:underline">
+    <div className="stagger space-y-4">
+      {/* Шапка занятия */}
+      <div className="relative animate-rise overflow-hidden rounded-[2rem] border border-line bg-surface p-5 shadow-soft sm:p-6">
+        <div aria-hidden className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand-500/15 blur-3xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {isTrainer && <Avatar name={s.client.user.name} size="lg" />}
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700 first-letter:uppercase">{relativeDayLabel(s.startsAt)}</div>
+              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
+            </div>
+          </div>
+          <PhaseBadge phase={s.phase} />
+        </div>
+        <div className="relative mt-5 flex flex-wrap items-end gap-x-6 gap-y-2">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Время (МСК)</div>
+            <div className="text-3xl font-extrabold tracking-tight">
+              {formatTime(s.startsAt)}
+              <span className="text-muted">–{formatTime(s.endsAt)}</span>
+            </div>
+          </div>
+          <div className="pb-1 text-sm font-medium text-ink-2 first-letter:uppercase">{formatDate(s.startsAt)}</div>
+          {isTrainer && (
+            <Link href={`/trainer/clients/${s.clientId}`} className="ml-auto pb-1 text-sm font-semibold text-brand-700 hover:underline">
               Карточка клиента →
             </Link>
-          ) : undefined
-        }
-      />
-      {flash && <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash}</p>}
+          )}
+        </div>
+      </div>
+      {flash && <Notice>{flash}</Notice>}
 
       {s.status === "SCHEDULED" && s.phase === "upcoming" && (
-        <Card title="Запись">
+        <Card title="Управление записью" icon={<CalendarClock size={15} />}>
           <SessionActions
             sessionId={s.id}
             role={actor.role}
@@ -84,18 +100,18 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
 
       {s.status === "CANCELLED" && (
         <Card>
-          <p className="text-sm text-slate-600">Занятие отменено{s.cancelledAt ? ` ${formatDateTime(s.cancelledAt)}` : ""}.</p>
+          <p className="text-sm text-ink-2">Занятие отменено{s.cancelledAt ? ` ${formatDateTime(s.cancelledAt)}` : ""}.</p>
         </Card>
       )}
 
       {resultsAllowed && (
-        <Card title="Результаты тренировки">
+        <Card title="Результаты тренировки" icon={<Dumbbell size={15} />}>
           {isTrainer ? (
             editor
           ) : (
             <>
               <ResultsList results={s.results} />
-              {s.status !== "COMPLETED" && <p className="mt-2 text-xs text-slate-500">Тренер внесёт результаты после занятия.</p>}
+              {s.status !== "COMPLETED" && <p className="mt-2 text-xs text-muted">Тренер внесёт результаты после занятия.</p>}
             </>
           )}
         </Card>
@@ -105,18 +121,18 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
       {!resultsAllowed && isTrainer && s.status !== "CANCELLED" && (
         <Card title="Заметка к тренировке">
           <ActionForm action={updateSessionNotesAction.bind(null, s.id)}>
-            <textarea name="notes" defaultValue={s.notes ?? ""} rows={3} maxLength={2000} placeholder="План, акценты, на что обратить внимание" className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm" />
+            <textarea name="notes" defaultValue={s.notes ?? ""} rows={3} maxLength={2000} placeholder="План, акценты, на что обратить внимание" className={inputClass} />
             <SubmitButton variant="secondary">Сохранить заметку</SubmitButton>
           </ActionForm>
         </Card>
       )}
       {!isTrainer && s.notes && (
         <Card title="Заметка тренера">
-          <p className="whitespace-pre-line text-sm text-slate-700">{s.notes}</p>
+          <p className="whitespace-pre-line text-sm text-ink-2">{s.notes}</p>
         </Card>
       )}
 
-      <Link href={`${base}/schedule?week=${moscowDateString(s.startsAt)}`} className="inline-block text-sm text-slate-500 hover:underline">
+      <Link href={`${base}/schedule?week=${moscowDateString(s.startsAt)}`} className="inline-block text-sm text-muted hover:underline">
         ← К расписанию
       </Link>
     </div>

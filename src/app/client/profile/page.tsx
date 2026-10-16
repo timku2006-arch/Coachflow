@@ -34,7 +34,7 @@ export default async function ClientProfile() {
             </Field>
             <SubmitButton>Сохранить</SubmitButton>
           </ActionForm>
-          <Link href="/change-password" className="mt-4 inline-block text-sm text-slate-500 hover:underline">Сменить пароль</Link>
+          <Link href="/change-password" className="mt-4 inline-block text-sm text-muted hover:underline">Сменить пароль</Link>
         </Card>
         <NutritionCard nutrition={client.nutrition} />
       </div>

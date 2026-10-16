@@ -7,7 +7,7 @@ import { listPrograms } from "@/server/services/programs";
 import { listHistory, listUpcoming } from "@/server/services/sessions";
 import { formatDate, formatDateTime, plural } from "@/lib/time";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { Card, Empty, Field, Input, LinkButton, PageHeader, Textarea } from "@/components/ui";
+import { Avatar, Card, Empty, Field, Input, LinkButton, Notice, PageHeader, Textarea } from "@/components/ui";
 import { SessionList } from "@/components/session-list";
 import { HistoryList } from "@/components/history-list";
 import { ProgressSection } from "@/components/progress-section";
@@ -32,19 +32,20 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
 
   return (
     <>
-      <PageHeader title={client.user.name} subtitle={client.user.email} action={<LinkButton href={`/trainer/schedule?client=${id}`} variant="secondary">+ Запись</LinkButton>} />
+      <PageHeader eyebrow="Клиент" title={<span className="flex items-center gap-3"><Avatar name={client.user.name} size="lg" />{client.user.name}</span>} subtitle={client.user.email} action={<LinkButton href={`/trainer/schedule?client=${id}`} variant="secondary">+ Запись</LinkButton>} />
       {sp.created && (
-        <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Клиент создан. Передайте ему email и временный пароль — при первом входе он задаст свой.
-        </p>
+        <Notice>Клиент создан. Передайте ему email и временный пароль — при первом входе он задаст свой.</Notice>
       )}
-      <nav className="-mx-4 mb-4 overflow-x-auto px-4">
-        <ul className="flex gap-1">
+      <nav className="-mx-4 mb-5 overflow-x-auto px-4 [scrollbar-width:none]">
+        <ul className="inline-flex gap-1 rounded-2xl bg-subtle p-1">
           {TABS.map(([k, label]) => (
             <li key={k}>
               <Link
                 href={`/trainer/clients/${id}?tab=${k}`}
-                className={clsx("block whitespace-nowrap rounded-lg px-3 py-1.5 text-sm", tab === k ? "bg-white font-medium text-brand-700 shadow-sm" : "text-slate-600 hover:bg-white/60")}
+                className={clsx(
+                  "block whitespace-nowrap rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-all duration-200",
+                  tab === k ? "bg-surface text-ink shadow-soft" : "text-muted hover:text-ink",
+                )}
               >
                 {label}
               </Link>
@@ -54,7 +55,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
       </nav>
 
       {tab === "overview" && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="stagger grid gap-4 md:grid-cols-2">
           <Card title="Профиль">
             <ActionForm action={updateClientProfileAction.bind(null, id)}>
               <Field label="Имя">
@@ -89,21 +90,21 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
             </ActionForm>
           </Card>
           <Card title="Заметки о клиенте" className="md:col-span-2">
-            <p className="mb-3 text-xs text-slate-500">Видны только вам.</p>
+            <p className="mb-3 text-xs text-muted">Видны только вам.</p>
             <ActionForm action={addClientNoteAction.bind(null, id)} resetOnSuccess>
               <Textarea name="text" required maxLength={2000} placeholder="Травмы, предпочтения, договорённости…" />
               <SubmitButton variant="secondary">Добавить заметку</SubmitButton>
             </ActionForm>
             <ul className="mt-4 space-y-2">
               {client.notes?.map((n) => (
-                <li key={n.id} className="rounded-xl bg-slate-50 p-3 text-sm">
+                <li key={n.id} className="animate-rise rounded-2xl bg-subtle p-3.5 text-sm">
                   <div className="flex items-start justify-between gap-2">
                     <p className="whitespace-pre-line">{n.text}</p>
                     <ActionForm action={deleteClientNoteAction.bind(null, n.id)} confirm="Удалить заметку?" className="space-y-0">
-                      <button className="text-slate-400 hover:text-red-600" aria-label="Удалить">✕</button>
+                      <button className="text-muted hover:text-red-600" aria-label="Удалить">✕</button>
                     </ActionForm>
                   </div>
-                  <div className="mt-1 text-xs text-slate-400">{formatDateTime(n.createdAt)}</div>
+                  <div className="mt-1 text-xs text-muted">{formatDateTime(n.createdAt)}</div>
                 </li>
               ))}
             </ul>
@@ -125,13 +126,13 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
         {programs.length === 0 ? (
           <Empty>Программ пока нет</Empty>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-line">
             {programs.map((p) => (
               <li key={p.id}>
-                <Link href={`/trainer/programs/${p.id}`} className="-mx-2 flex items-center justify-between rounded-lg px-2 py-3 hover:bg-slate-50">
+                <Link href={`/trainer/programs/${p.id}`} className="-mx-2 flex items-center justify-between rounded-lg px-2 py-3 hover:bg-subtle">
                   <span>
                     <span className="font-medium">{p.name}</span>
-                    <span className="block text-xs text-slate-500">
+                    <span className="block text-xs text-muted">
                       {plural(p._count.exercises, ["упражнение", "упражнения", "упражнений"])} · обновлена {formatDate(p.updatedAt)}
                     </span>
                   </span>
@@ -148,7 +149,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
   async function ScheduleTab({ clientId }: { clientId: string }) {
     const upcoming = await listUpcoming(actor, clientId, new Date(), 20);
     return (
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="stagger grid gap-4 md:grid-cols-2">
         <Card title="Ближайшие занятия">
           <SessionList sessions={upcoming} href={(s) => `/trainer/sessions/${s}`} empty="Нет предстоящих занятий" />
         </Card>

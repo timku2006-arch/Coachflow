@@ -1,6 +1,6 @@
 // CoachFlow service worker: кэш статики и офлайн-страница.
 // Данные (страницы, действия) всегда запрашиваются из сети — офлайн показываем заглушку.
-const CACHE = "coachflow-v1";
+const CACHE = "coachflow-v2";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icons/icon.svg", "/icons/icon-192.png"];
 

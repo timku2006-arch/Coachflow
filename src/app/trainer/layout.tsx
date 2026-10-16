@@ -3,11 +3,11 @@ import { AppShell } from "@/components/app-shell";
 import { requireTrainer } from "@/server/auth";
 
 const items = [
-  { href: "/trainer", label: "Главная", icon: "🏠", exact: true },
-  { href: "/trainer/schedule", label: "Расписание", icon: "📅" },
-  { href: "/trainer/clients", label: "Клиенты", icon: "👥" },
-  { href: "/trainer/exercises", label: "Упражнения", icon: "🏋️" },
-  { href: "/trainer/profile", label: "Профиль", icon: "⚙️" },
+  { href: "/trainer", label: "Главная", icon: "home" as const, exact: true },
+  { href: "/trainer/schedule", label: "Расписание", icon: "calendar" as const },
+  { href: "/trainer/clients", label: "Клиенты", icon: "users" as const },
+  { href: "/trainer/exercises", label: "Упражнения", icon: "dumbbell" as const },
+  { href: "/trainer/profile", label: "Профиль", icon: "settings" as const },
 ];
 
 export default async function TrainerLayout({ children }: { children: ReactNode }) {

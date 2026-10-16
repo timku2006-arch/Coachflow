@@ -98,3 +98,25 @@ export function plural(n: number, forms: [string, string, string]): string {
   const form = a > 10 && a < 20 ? forms[2] : b > 1 && b < 5 ? forms[1] : b === 1 ? forms[0] : forms[2];
   return `${n} ${form}`;
 }
+
+/** «Сегодня», «Завтра» или «пт, 18 окт.» — для подписей занятий. */
+export function relativeDayLabel(d: Date, now: Date = new Date()): string {
+  const key = moscowDateString(d);
+  if (key === moscowDateString(now)) return "Сегодня";
+  if (key === moscowDateString(addMoscowDays(now, 1))) return "Завтра";
+  if (key === moscowDateString(addMoscowDays(now, -1))) return "Вчера";
+  return fmt(d, "EEEEEE, d MMM");
+}
+
+/** «через 2 ч 15 мин», «через 3 дня», «идёт сейчас». */
+export function timeUntil(d: Date, now: Date = new Date()): string {
+  const min = Math.round((d.getTime() - now.getTime()) / 60_000);
+  if (min <= 0) return "уже началось";
+  if (min < 60) return `через ${min} мин`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `через ${h} ч${min % 60 ? ` ${min % 60} мин` : ""}`;
+  const days = Math.round(h / 24);
+  return `через ${plural(days, ["день", "дня", "дней"])}`;
+}
+
+export const formatLongDate = (d: Date) => fmt(d, "EEEE, d MMMM");

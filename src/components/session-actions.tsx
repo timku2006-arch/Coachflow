@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ActionForm, SubmitButton, buttonClass } from "./form";
 import { cancelSessionAction, rescheduleSessionAction } from "@/app/actions/sessions";
 import { CLIENT_CHANGE_WINDOW_HOURS } from "@/lib/booking-rules";
+import { CalendarClock, Clock3, Send, X } from "lucide-react";
+import { inputClass } from "./input-class";
 
 type Props = {
   sessionId: string;
@@ -41,18 +43,18 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
         </p>
       )}
       {role === "TRAINER" && (
-        <p className="text-xs text-slate-500">Тренер может переносить и отменять занятия в любое время.</p>
+        <p className="text-xs text-muted">Тренер может переносить и отменять занятия в любое время.</p>
       )}
       {mode === "reschedule" ? (
-        <ActionForm action={rescheduleSessionAction.bind(null, sessionId)} onState={onState} className="rounded-xl bg-slate-50 p-3">
+        <ActionForm action={rescheduleSessionAction.bind(null, sessionId)} onState={onState} className="animate-rise rounded-2xl bg-subtle p-3">
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Новая дата</span>
-              <input name="date" type="date" required defaultValue={defaultDate} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" />
+              <span className="mb-1 block font-medium text-ink-2">Новая дата</span>
+              <input name="date" type="date" required defaultValue={defaultDate} className={inputClass} />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Время (МСК)</span>
-              <input name="time" type="time" step={900} required defaultValue={defaultTime} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" />
+              <span className="mb-1 block font-medium text-ink-2">Время (МСК)</span>
+              <input name="time" type="time" step={900} required defaultValue={defaultTime} className={inputClass} />
             </label>
           </div>
           <div className="flex gap-2">
@@ -65,10 +67,12 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
       ) : (
         <div className="flex flex-wrap gap-2">
           <button type="button" className={buttonClass("secondary")} onClick={() => setMode("reschedule")}>
-            Перенести
+            <CalendarClock size={17} /> Перенести
           </button>
           <ActionForm action={cancelSessionAction.bind(null, sessionId)} onState={onState} confirm="Отменить занятие?">
-            <SubmitButton variant="danger">Отменить занятие</SubmitButton>
+            <SubmitButton variant="danger">
+              <X size={17} strokeWidth={2.5} /> Отменить занятие
+            </SubmitButton>
           </ActionForm>
         </div>
       )}
@@ -78,15 +82,27 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
 
 export function LockedNotice({ telegramUrl }: { telegramUrl: string | null }) {
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <p className="font-medium">До начала занятия осталось {CLIENT_CHANGE_WINDOW_HOURS} часа или меньше</p>
-      <p className="mt-1">Перенести или отменить его самостоятельно уже нельзя. Напишите тренеру — он поможет.</p>
+    <div className="relative overflow-hidden rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <div className="flex gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+          <Clock3 size={20} />
+        </span>
+        <div>
+          <p className="font-bold">До начала осталось {CLIENT_CHANGE_WINDOW_HOURS} часа или меньше</p>
+          <p className="mt-0.5 text-amber-800">Перенести или отменить занятие самостоятельно уже нельзя. Напишите тренеру — он поможет.</p>
+        </div>
+      </div>
       {telegramUrl ? (
-        <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("primary") + " mt-3 bg-sky-600 hover:bg-sky-700"}>
-          ✈️ Написать тренеру в Telegram
+        <a
+          href={telegramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_30px_-10px_rgb(14_165_233_/_0.7)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98] sm:w-auto"
+        >
+          <Send size={17} /> Написать тренеру в Telegram
         </a>
       ) : (
-        <p className="mt-2 text-amber-800">Тренер пока не указал Telegram — свяжитесь с ним удобным способом.</p>
+        <p className="mt-3 text-amber-800">Тренер пока не указал Telegram — свяжитесь с ним удобным способом.</p>
       )}
     </div>
   );

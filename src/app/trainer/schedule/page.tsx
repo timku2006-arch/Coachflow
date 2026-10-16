@@ -25,7 +25,7 @@ export default async function TrainerSchedule({ searchParams }: { searchParams: 
       />
       <Card title="Новая запись" className="mt-4 max-w-lg">
         {clients.length === 0 ? (
-          <p className="text-sm text-slate-500">Сначала добавьте клиента.</p>
+          <p className="text-sm text-muted">Сначала добавьте клиента.</p>
         ) : (
           <BookingForm clients={clients.map((c) => ({ id: c.id, name: c.user.name }))} defaultClientId={params.client} />
         )}

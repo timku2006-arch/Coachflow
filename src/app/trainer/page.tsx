@@ -1,12 +1,20 @@
+import Link from "next/link";
+import { startOfDay } from "date-fns";
+import { CalendarDays, ClipboardCheck, Plus, Send } from "lucide-react";
 import { prisma } from "@/server/db";
 import { requireTrainer } from "@/server/auth";
 import { listAwaitingResults } from "@/server/services/sessions";
-import { addMoscowDays, moscowWeekStart, toMoscow } from "@/lib/time";
-import { startOfDay } from "date-fns";
-import { Card, LinkButton, PageHeader, Stat } from "@/components/ui";
+import { addMoscowDays, formatLongDate, moscowWeekStart, toMoscow } from "@/lib/time";
+import { Card, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
 import { SessionList } from "@/components/session-list";
+import { CountUp } from "@/components/count-up";
 
 export const metadata = { title: "Главная" };
+
+function greeting(now: Date) {
+  const h = toMoscow(now).getHours();
+  return h < 5 ? "Доброй ночи" : h < 12 ? "Доброе утро" : h < 18 ? "Добрый день" : "Добрый вечер";
+}
 
 export default async function TrainerHome() {
   const { user, actor } = await requireTrainer();
@@ -25,25 +33,40 @@ export default async function TrainerHome() {
       where: { trainerId: actor.trainerId, status: { not: "CANCELLED" }, startsAt: { gte: weekStart, lt: addMoscowDays(weekStart, 7) } },
     }),
   ]);
+  const activeToday = today.filter((s) => s.status !== "CANCELLED");
   return (
     <>
-      <PageHeader title={`Привет, ${user.name.split(" ")[0]}!`} action={<LinkButton href="/trainer/schedule">+ Записать клиента</LinkButton>} />
+      <PageHeader
+        eyebrow={<span className="first-letter:uppercase">{formatLongDate(now)}</span>}
+        title={`${greeting(now)}, ${user.name.split(" ")[0]}!`}
+        subtitle={activeToday.length ? `Сегодня ${activeToday.length === 1 ? "одна тренировка" : `тренировок: ${activeToday.length}`}` : "Сегодня тренировок нет — можно выдохнуть"}
+        action={
+          <LinkButton href="/trainer/schedule">
+            <Plus size={18} strokeWidth={2.5} /> Записать клиента
+          </LinkButton>
+        }
+      />
       {!user.trainerProfile?.telegramUsername && (
-        <p className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Укажите Telegram в <a href="/trainer/profile" className="font-medium underline">профиле</a> — клиенты смогут написать вам, если до занятия меньше 3 часов.
-        </p>
+        <Notice tone="warning">
+          <Send size={15} className="mr-1.5 inline -translate-y-px" />
+          Укажите Telegram в{" "}
+          <Link href="/trainer/profile" className="font-bold underline">
+            профиле
+          </Link>{" "}
+          — клиенты смогут написать вам, если до занятия меньше 3 часов.
+        </Notice>
       )}
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        <Stat label="Клиентов" value={clientsCount} />
-        <Stat label="Занятий на неделе" value={weekCount} />
-        <Stat label="Ждут результатов" value={awaiting.length} />
+      <div className="stagger mb-5 grid grid-cols-3 gap-2.5">
+        <Stat tone="brand" label="Клиенты" value={<CountUp value={clientsCount} />} />
+        <Stat label="За неделю" value={<CountUp value={weekCount} />} />
+        <Stat label="Без итогов" value={<CountUp value={awaiting.length} />} />
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card title="Сегодня">
+      <div className="stagger grid gap-4 md:grid-cols-2">
+        <Card title="Сегодня" icon={<CalendarDays size={15} />}>
           <SessionList sessions={today} href={(id) => `/trainer/sessions/${id}`} empty="Сегодня занятий нет" showClient />
         </Card>
-        <Card title="Внесите результаты">
-          <SessionList sessions={awaiting} href={(id) => `/trainer/sessions/${id}`} empty="Все результаты внесены 👍" showClient />
+        <Card title="Внесите результаты" icon={<ClipboardCheck size={15} />}>
+          <SessionList sessions={awaiting} href={(id) => `/trainer/sessions/${id}`} empty="Все результаты внесены — отличная работа!" showClient />
         </Card>
       </div>
     </>

@@ -1,19 +1,190 @@
 @import "tailwindcss";
 
+/* ============================================================
+   CoachFlow — дизайн-система
+   Семантические цвета (canvas/surface/ink/…) переключаются
+   вместе с системной темой. Акцент — фиолетовый «brand».
+   ============================================================ */
+
 @theme {
-  --color-brand-50: #ecfdf8;
-  --color-brand-100: #d1faee;
-  --color-brand-200: #a7f3dc;
-  --color-brand-500: #14b88a;
-  --color-brand-600: #0d9470;
-  --color-brand-700: #0b765b;
-  --color-brand-800: #0c5e4a;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-subtle: var(--c-subtle);
+  --color-subtle-2: var(--c-subtle-2);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-muted: var(--c-muted);
+  --color-faint: var(--c-faint);
+  --color-on-brand: #ffffff;
+
+  --color-brand-50: var(--c-brand-50);
+  --color-brand-100: var(--c-brand-100);
+  --color-brand-200: var(--c-brand-200);
+  --color-brand-300: #b09cff;
+  --color-brand-400: #9579ff;
+  --color-brand-500: #7c5cff;
+  --color-brand-600: #6a45f5;
+  --color-brand-700: var(--c-brand-700);
+  --color-brand-800: var(--c-brand-800);
+  --color-accent: #c8f169; /* лайм — для акцентов прогресса */
+
+  --radius-4xl: 2rem;
+
+  --shadow-soft: 0 1px 2px rgb(15 15 30 / 0.04), 0 8px 24px -12px rgb(15 15 30 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(15 15 30 / 0.05), 0 18px 40px -16px rgb(15 15 30 / 0.22);
+  --shadow-glow: 0 10px 30px -10px rgb(124 92 255 / 0.65);
+
+  --animate-page: page-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-float: float 14s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2s ease-out infinite;
+  --animate-grow: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:root {
+  color-scheme: light;
+  --c-canvas: #f4f4f8;
+  --c-surface: #ffffff;
+  --c-subtle: #f1f1f6;
+  --c-subtle-2: #e7e7ef;
+  --c-line: #e9e9f0;
+  --c-line-strong: #d6d6e0;
+  --c-ink: #11111a;
+  --c-ink-2: #3d3d4c;
+  --c-muted: #737384;
+  --c-faint: #b6b6c3;
+  --c-brand-50: #f3f0ff;
+  --c-brand-100: #e8e2ff;
+  --c-brand-200: #d2c6ff;
+  --c-brand-700: #5532d8;
+  --c-brand-800: #4526ad;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --c-canvas: #0a0a0f;
+    --c-surface: #14141c;
+    --c-subtle: #1b1b25;
+    --c-subtle-2: #24242f;
+    --c-line: #23232d;
+    --c-line-strong: #32323e;
+    --c-ink: #f3f3f8;
+    --c-ink-2: #c9c9d5;
+    --c-muted: #8b8b9b;
+    --c-faint: #4a4a57;
+    --c-brand-50: #1c1730;
+    --c-brand-100: #251d42;
+    --c-brand-200: #3a2e6a;
+    --c-brand-700: #b3a1ff;
+    --c-brand-800: #cbbfff;
+
+    /* статусные цвета: тёмные подложки, светлый текст */
+    --color-emerald-50: #0d2a1e;
+    --color-emerald-100: #103426;
+    --color-emerald-700: #5fe0a4;
+    --color-emerald-800: #8cf0c2;
+    --color-red-50: #2d1216;
+    --color-red-700: #ff9a9a;
+    --color-amber-50: #2a200d;
+    --color-amber-100: #382a0e;
+    --color-amber-200: #594314;
+    --color-amber-700: #fbbf24;
+    --color-amber-800: #fcd34d;
+    --color-amber-900: #fde68a;
+    --color-sky-100: #0e2536;
+    --color-sky-800: #7dd3fc;
+    --color-orange-100: #33200e;
+    --color-orange-800: #fdba74;
+  }
 }
 
 html {
   -webkit-tap-highlight-color: transparent;
 }
 body {
-  @apply bg-slate-100 text-slate-900 antialiased;
+  @apply bg-canvas text-ink antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: rgb(124 92 255 / 0.25);
+}
+
+/* ---------------------------------------------- анимации */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.08); }
+  66% { transform: translate(-25px, 20px) scale(0.95); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(124 92 255 / 0.5); }
+  80%, 100% { box-shadow: 0 0 0 10px rgb(124 92 255 / 0); }
+}
+
+/* Каскадное появление дочерних блоков */
+.stagger > * {
+  animation: var(--animate-rise);
+}
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.07s; }
+.stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger > *:nth-child(4) { animation-delay: 0.17s; }
+.stagger > *:nth-child(5) { animation-delay: 0.22s; }
+.stagger > *:nth-child(6) { animation-delay: 0.27s; }
+.stagger > *:nth-child(7) { animation-delay: 0.32s; }
+.stagger > *:nth-child(n + 8) { animation-delay: 0.36s; }
+
+/* Фирменный градиент */
+.bg-brand-gradient {
+  background-image: linear-gradient(135deg, #8b6dff 0%, #6a45f5 45%, #4f2fd6 100%);
+}
+.text-brand-gradient {
+  background-image: linear-gradient(120deg, #9b80ff, #6a45f5 60%, #c8f169);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Поля ввода дат/времени в тёмной теме */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+}
+@media (prefers-color-scheme: dark) {
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

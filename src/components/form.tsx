@@ -37,7 +37,7 @@ export function ActionForm({
     <form
       ref={ref}
       action={formAction}
-      className={clsx("space-y-3", className)}
+      className={clsx("space-y-4", className)}
       onSubmit={(e) => {
         if (confirm && !window.confirm(confirm)) e.preventDefault();
       }}
@@ -51,13 +51,13 @@ export function ActionForm({
 export function FormMessage({ state }: { state: FormState }) {
   if (state.error)
     return (
-      <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+      <p role="alert" className="animate-rise rounded-2xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700">
         {state.error}
       </p>
     );
   if (state.ok && state.message)
     return (
-      <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+      <p role="status" className="animate-rise rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">
         {state.message}
       </p>
     );
@@ -76,7 +76,14 @@ export function SubmitButton({
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} className={clsx(buttonClass(variant), className)}>
-      {pending ? "Сохраняю…" : children}
+      {pending ? (
+        <>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+          Сохраняю…
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

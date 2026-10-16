@@ -29,7 +29,7 @@ export function BookingForm({ clients, defaultClientId, defaultDate }: { clients
           <Input name="time" type="time" required step={900} defaultValue="10:00" />
         </Field>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         Длительность — {SESSION_DURATION_MIN} минут.
         {!clients && ` Запись возможна не позднее чем за ${CLIENT_CHANGE_WINDOW_HOURS} часа до начала.`}
       </p>

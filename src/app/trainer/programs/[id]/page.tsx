@@ -5,7 +5,7 @@ import { prisma } from "@/server/db";
 import { getProgram } from "@/server/services/programs";
 import { listExercises } from "@/server/services/exercises";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { Card, PageHeader } from "@/components/ui";
+import { Card, Notice, PageHeader } from "@/components/ui";
 import { ProgramEditor } from "@/components/program-editor";
 import { activateProgramAction, deleteProgramAction, updateProgramAction } from "@/app/actions/trainer";
 
@@ -39,7 +39,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
           )
         }
       />
-      {saved && <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">Программа создана</p>}
+      {saved && <Notice>Программа создана</Notice>}
       <Card className="max-w-2xl">
         <ProgramEditor
           action={updateProgramAction.bind(null, id)}
