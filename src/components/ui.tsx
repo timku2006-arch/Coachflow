@@ -1,23 +1,28 @@
 import Link from "next/link";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
 import { buttonClass } from "./button-class";
 import { inputClass } from "./input-class";
 import { phaseLabel, type SessionPhase } from "@/lib/session-phase";
 
+export { inputClass };
+
+/** Крупный заголовок экрана, как в приложениях iOS. */
 export function PageHeader({ title, subtitle, action, eyebrow }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">{eyebrow}</div>}
-        <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-ink sm:text-3xl">{title}</h1>
-        {subtitle && <div className="mt-1.5 text-sm text-muted">{subtitle}</div>}
+        {eyebrow && <div className="mb-0.5 animate-rise text-[13px] font-semibold uppercase tracking-wide text-muted">{eyebrow}</div>}
+        <h1 className="animate-rise font-display text-[2.125rem] font-bold leading-tight [animation-delay:0.04s] sm:text-[2.5rem]">{title}</h1>
+        {subtitle && <div className="mt-1 animate-rise text-[15px] text-muted [animation-delay:0.1s]">{subtitle}</div>}
       </div>
-      {action}
+      {action && <div className="animate-rise [animation-delay:0.12s]">{action}</div>}
     </div>
   );
 }
 
+/** Карточка: тёмная плашка со скруглением, заголовок секции сверху. */
 export function Card({
   title,
   action,
@@ -30,21 +35,22 @@ export function Card({
   children: ReactNode;
   className?: string;
   icon?: ReactNode;
+  index?: string;
 }) {
   return (
-    <section className={clsx("rounded-3xl border border-line bg-surface p-4 shadow-soft sm:p-5", className)}>
+    <section className={clsx("min-w-0", className)}>
       {(title || action) && (
-        <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="mb-2 flex items-center justify-between gap-2 px-1">
           {title && (
-            <h2 className="flex items-center gap-2 text-[0.95rem] font-bold text-ink">
-              {icon && <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-brand-50 text-brand-700">{icon}</span>}
+            <h2 className="flex items-center gap-2 font-display text-[1.375rem] font-bold leading-tight">
+              {icon && <span className="text-brand-500">{icon}</span>}
               {title}
             </h2>
           )}
           {action}
         </div>
       )}
-      {children}
+      <div className="rounded-3xl bg-surface p-4">{children}</div>
     </section>
   );
 }
@@ -53,12 +59,12 @@ export function LinkButton({ variant = "primary", className, ...props }: Compone
   return <Link {...props} className={clsx(buttonClass(variant), className)} />;
 }
 
-/** Небольшая ссылка «ещё» в шапке карточки */
+/** Ссылка «Показать все» в шапке секции */
 export function MoreLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="group inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-brand-700 transition hover:bg-brand-50">
+    <Link href={href} className="press inline-flex items-center gap-0.5 text-[15px] font-medium text-brand-500 hover:opacity-80">
       {children}
-      <span className="transition-transform group-hover:translate-x-0.5">→</span>
+      <ChevronRight size={16} />
     </Link>
   );
 }
@@ -66,14 +72,12 @@ export function MoreLink({ href, children }: { href: string; children: ReactNode
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{label}</span>
+      <span className="mb-1.5 block px-1 text-[13px] font-semibold text-muted">{label}</span>
       {children}
-      {hint && <span className="mt-1.5 block text-xs text-muted">{hint}</span>}
+      {hint && <span className="mt-1.5 block px-1 text-xs text-muted">{hint}</span>}
     </label>
   );
 }
-
-export { inputClass };
 
 export function Input(props: ComponentProps<"input">) {
   return <input {...props} className={clsx(inputClass, props.className)} />;
@@ -82,22 +86,31 @@ export function Textarea(props: ComponentProps<"textarea">) {
   return <textarea rows={3} {...props} className={clsx(inputClass, "resize-y", props.className)} />;
 }
 export function Select(props: ComponentProps<"select">) {
-  return <select {...props} className={clsx(inputClass, "appearance-none bg-[length:16px] bg-[right_0.9rem_center] bg-no-repeat pr-9", props.className)} style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b8b9b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")" }} />;
+  return (
+    <select
+      {...props}
+      className={clsx(inputClass, "appearance-none bg-[length:14px] bg-[right_0.9rem_center] bg-no-repeat pr-9", props.className)}
+      style={{
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5 5 5-5M7 9l5-5 5 5'/%3E%3C/svg%3E\")",
+      }}
+    />
+  );
 }
 
-const phaseStyles: Record<SessionPhase, { pill: string; dot: string }> = {
-  upcoming: { pill: "bg-brand-50 text-brand-700", dot: "bg-brand-500" },
-  in_progress: { pill: "bg-amber-100 text-amber-800", dot: "bg-amber-500 animate-pulse" },
-  awaiting_results: { pill: "bg-orange-100 text-orange-800", dot: "bg-orange-500" },
-  completed: { pill: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
-  cancelled: { pill: "bg-subtle-2 text-muted line-through", dot: "bg-faint" },
+const phaseStyles: Record<SessionPhase, { text: string; dot: string }> = {
+  upcoming: { text: "text-ring-blue", dot: "bg-ring-blue" },
+  in_progress: { text: "text-brand-500", dot: "bg-brand-500 animate-blink" },
+  awaiting_results: { text: "text-ring-red", dot: "bg-ring-red" },
+  completed: { text: "text-brand-500", dot: "bg-brand-500" },
+  cancelled: { text: "text-muted line-through", dot: "bg-faint" },
 };
 
 export function PhaseBadge({ phase }: { phase: SessionPhase }) {
   const s = phaseStyles[phase];
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold", s.pill)}>
-      <span className={clsx("h-1.5 w-1.5 rounded-full", s.dot)} />
+    <span className={clsx("inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold", s.text)}>
+      <span className={clsx("h-2 w-2 rounded-full", s.dot)} />
       {phaseLabel[phase]}
     </span>
   );
@@ -105,44 +118,43 @@ export function PhaseBadge({ phase }: { phase: SessionPhase }) {
 
 export function Empty({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line-strong px-4 py-8 text-center text-sm text-muted">
+    <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-[15px] text-muted">
       {icon && <span className="text-faint">{icon}</span>}
       {children}
     </div>
   );
 }
 
-export function Stat({ label, value, unit, icon, tone = "default" }: { label: string; value: ReactNode; unit?: string; icon?: ReactNode; tone?: "default" | "brand" }) {
+/** Показатель: подпись цветом, крупное округлое число. */
+export function Stat({
+  label,
+  value,
+  unit,
+  tone = "default",
+  color,
+}: {
+  label: string;
+  value: ReactNode;
+  unit?: string;
+  icon?: ReactNode;
+  tone?: "default" | "brand";
+  color?: "red" | "green" | "blue";
+}) {
+  const c = color ?? (tone === "brand" ? "green" : undefined);
+  const cls = c === "red" ? "text-ring-red" : c === "green" ? "text-ring-green" : c === "blue" ? "text-ring-blue" : "text-ink";
   return (
-    <div
-      className={clsx(
-        "relative overflow-hidden rounded-2xl p-3.5 transition hover:-translate-y-0.5",
-        tone === "brand" ? "bg-brand-gradient text-on-brand shadow-glow" : "border border-line bg-surface shadow-soft",
-      )}
-    >
-      <div className={clsx("flex items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide", tone === "brand" ? "text-white/80" : "text-muted")}>
-        {icon}
-        {label}
-      </div>
-      <div className="mt-1 text-2xl font-extrabold tracking-tight">
+    <div className="rounded-3xl bg-surface p-4">
+      <div className="text-[13px] font-semibold text-ink">{label}</div>
+      <div className={clsx("mt-1 font-display text-[2rem] font-bold leading-none", cls)}>
         {value}
-        {unit && <span className={clsx("ml-1 text-sm font-semibold", tone === "brand" ? "text-white/75" : "text-muted")}>{unit}</span>}
+        {unit && <span className="ml-0.5 text-base font-semibold">{unit}</span>}
       </div>
     </div>
   );
 }
 
-const avatarGradients = [
-  "from-violet-500 to-fuchsia-500",
-  "from-sky-500 to-indigo-500",
-  "from-emerald-500 to-teal-500",
-  "from-amber-500 to-orange-500",
-  "from-rose-500 to-pink-500",
-  "from-indigo-500 to-violet-600",
-];
-
-export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
-  const hash = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+/** Монограмма в круге — как в «Контактах». */
+export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg"; accent?: boolean }) {
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -152,11 +164,10 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md"
   return (
     <span
       className={clsx(
-        "inline-flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br font-bold text-white shadow-soft",
-        avatarGradients[hash % avatarGradients.length],
-        size === "sm" && "h-8 w-8 text-xs",
-        size === "md" && "h-11 w-11 text-sm",
-        size === "lg" && "h-14 w-14 text-lg",
+        "inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#5a5a5f] font-display font-semibold leading-none text-white",
+        size === "sm" && "h-8 w-8 text-[13px]",
+        size === "md" && "h-11 w-11 text-base",
+        size === "lg" && "h-16 w-16 text-2xl",
       )}
     >
       {initials}
@@ -164,18 +175,36 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md"
   );
 }
 
-/** Сообщение-уведомление (успех/инфо/предупреждение) с анимацией появления. */
+/** Плашка-уведомление. */
 export function Notice({ tone = "success", children }: { tone?: "success" | "info" | "warning"; children: ReactNode }) {
   return (
     <div
       className={clsx(
-        "mb-5 animate-rise rounded-2xl px-4 py-3 text-sm font-medium",
-        tone === "success" && "bg-emerald-50 text-emerald-800",
-        tone === "info" && "bg-brand-50 text-brand-800",
-        tone === "warning" && "bg-amber-50 text-amber-900",
+        "mb-5 animate-pop rounded-2xl px-4 py-3 text-[15px]",
+        tone === "success" && "bg-brand-500/15 text-brand-300",
+        tone === "info" && "bg-ring-blue/15 text-ring-blue",
+        tone === "warning" && "bg-amber-50 text-amber-800",
       )}
     >
       {children}
     </div>
+  );
+}
+
+/** Сгруппированный список в стиле iOS: строки с разделителями и шевроном. */
+export function ListRow({ href, children, className }: { href?: string; children: ReactNode; className?: string }) {
+  const inner = (
+    <>
+      <div className="flex min-w-0 flex-1 items-center gap-3">{children}</div>
+      {href && <ChevronRight size={18} className="shrink-0 text-faint transition-transform duration-300 group-hover:translate-x-0.5" />}
+    </>
+  );
+  const cls = clsx("group flex items-center gap-3 py-3 transition-colors", href && "press -mx-2 rounded-xl px-2 hover:bg-subtle/60", className);
+  return href ? (
+    <Link href={href} className={cls}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }

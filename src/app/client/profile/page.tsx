@@ -16,7 +16,7 @@ export default async function ClientProfile() {
   return (
     <>
       <PageHeader title="Мой профиль" subtitle={`${user.email} · тренер ${client.trainer.user.name}`} />
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card title="Данные">
           <div className="mb-4">
             <Stat label="Текущий вес" value={lastWeight ? fmtKg(lastWeight.weightKg) : "—"} unit={lastWeight ? "кг" : undefined} />

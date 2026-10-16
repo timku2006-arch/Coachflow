@@ -2,14 +2,14 @@ import clsx from "clsx";
 
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
+/** Кнопки в духе iOS: скруглённые, с мягким «утапливанием» при нажатии. */
 export function buttonClass(variant: ButtonVariant = "primary") {
   return clsx(
-    "inline-flex select-none items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold",
-    "transition-all duration-200 ease-out active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60",
-    "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-200",
-    variant === "primary" && "bg-brand-gradient text-on-brand shadow-glow hover:-translate-y-0.5 hover:brightness-110",
-    variant === "secondary" && "border border-line-strong bg-surface text-ink hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-soft",
-    variant === "danger" && "bg-red-600 text-white shadow-[0_10px_30px_-12px_rgb(220_38_38_/_0.7)] hover:-translate-y-0.5 hover:bg-red-500",
-    variant === "ghost" && "text-brand-700 hover:bg-brand-50",
+    "press inline-flex select-none items-center justify-center gap-2 rounded-2xl px-5 py-3 text-[15px] font-semibold leading-none",
+    "disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500",
+    variant === "primary" && "bg-brand-500 text-on-brand hover:bg-brand-400",
+    variant === "secondary" && "bg-subtle text-ink hover:bg-subtle-2",
+    variant === "danger" && "bg-red-600/15 text-red-600 hover:bg-red-600/25",
+    variant === "ghost" && "px-3 text-brand-500 hover:bg-subtle",
   );
 }

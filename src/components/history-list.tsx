@@ -1,23 +1,31 @@
-import Link from "next/link";
+import { History } from "lucide-react";
 import type { listHistory } from "@/server/services/sessions";
-import { formatDateTime } from "@/lib/time";
-import { Empty } from "./ui";
+import { formatDate, formatTime } from "@/lib/time";
+import { Empty, ListRow } from "./ui";
 import { ResultsList } from "./results-list";
 
 export function HistoryList({ history, hrefBase }: { history: Awaited<ReturnType<typeof listHistory>>; hrefBase: string }) {
-  if (history.length === 0) return <Empty>Прошедших тренировок пока нет</Empty>;
+  if (history.length === 0) return <Empty icon={<History size={28} strokeWidth={1.6} />}>Прошедших тренировок пока нет</Empty>;
   return (
     <ul className="stagger space-y-3">
       {history.map((s) => (
-        <li key={s.id}>
-          <Link href={`${hrefBase}/${s.id}`} className="block rounded-3xl border border-line bg-surface p-4 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="font-extrabold tracking-tight first-letter:uppercase">{formatDateTime(s.startsAt)}</span>
-              {s.status === "SCHEDULED" && <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold text-orange-800">Ждёт результатов</span>}
+        <li key={s.id} className="rounded-3xl bg-surface px-4">
+          <ListRow href={`${hrefBase}/${s.id}`}>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[17px] font-semibold first-letter:uppercase">{formatDate(s.startsAt)}</span>
+                <span className="font-display font-semibold text-muted">{formatTime(s.startsAt)}</span>
+              </div>
+              <div className="mt-1.5">
+                {s.status === "COMPLETED" ? (
+                  <ResultsList results={s.results} compact />
+                ) : (
+                  <span className="text-[13px] font-semibold text-ring-red">● Ждёт результатов</span>
+                )}
+              </div>
+              {s.notes && <p className="mt-1.5 text-[14px] italic text-muted">«{s.notes}»</p>}
             </div>
-            {s.status === "COMPLETED" && <ResultsList results={s.results} compact />}
-            {s.notes && <p className="mt-2 text-sm italic text-muted">{s.notes}</p>}
-          </Link>
+          </ListRow>
         </li>
       ))}
     </ul>

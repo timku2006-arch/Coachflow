@@ -11,7 +11,7 @@ export default async function ChangePasswordPage() {
   const user = await requireUser();
   return (
     <>
-      <h1 className="mb-1 text-xl font-extrabold tracking-tight">Смена пароля</h1>
+      <h1 className="mb-1 font-display text-[1.375rem] font-bold">Смена пароля</h1>
       {user.mustChangePassword && (
         <p className="mb-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           Пароль был выдан тренером. Придумайте свой, чтобы продолжить.

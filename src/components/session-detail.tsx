@@ -9,7 +9,7 @@ import { telegramLink } from "@/lib/booking-rules";
 import { formatDate, formatDateTime, formatTime, moscowDateString, moscowTimeString, relativeDayLabel } from "@/lib/time";
 import { canEnterResults } from "@/lib/session-phase";
 import { Avatar, Card, Notice, PhaseBadge } from "./ui";
-import { CalendarClock, Dumbbell } from "lucide-react";
+import { Countdown } from "./countdown";
 import { ResultsList } from "./results-list";
 import { SessionActions } from "./session-actions";
 import { ResultsEditor, type EditorSet } from "./results-editor";
@@ -55,38 +55,41 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
   return (
     <div className="stagger space-y-4">
       {/* Шапка занятия */}
-      <div className="relative animate-rise overflow-hidden rounded-[2rem] border border-line bg-surface p-5 shadow-soft sm:p-6">
-        <div aria-hidden className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand-500/15 blur-3xl" />
-        <div className="relative flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {isTrainer && <Avatar name={s.client.user.name} size="lg" />}
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700 first-letter:uppercase">{relativeDayLabel(s.startsAt)}</div>
-              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
+      <div className="relative animate-pop overflow-hidden rounded-3xl bg-gradient-to-br from-[#2a2a2e] to-[#141416] p-5">
+        <div aria-hidden className="absolute -right-20 -top-20 h-56 w-56 animate-breathe rounded-full bg-ring-blue/15 blur-3xl" />
+        <div className="relative flex items-center gap-3">
+          {isTrainer && <Avatar name={s.client.user.name} size="lg" />}
+          <div className="min-w-0">
+            <div className="text-[15px] font-semibold text-muted first-letter:uppercase">
+              {relativeDayLabel(s.startsAt)}, {formatDate(s.startsAt)}
             </div>
+            <h1 className="truncate font-display text-[1.75rem] font-bold leading-tight">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
+            <PhaseBadge phase={s.phase} />
           </div>
-          <PhaseBadge phase={s.phase} />
         </div>
-        <div className="relative mt-5 flex flex-wrap items-end gap-x-6 gap-y-2">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Время (МСК)</div>
-            <div className="text-3xl font-extrabold tracking-tight">
-              {formatTime(s.startsAt)}
-              <span className="text-muted">–{formatTime(s.endsAt)}</span>
-            </div>
+        <div className="relative mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-white/10 pt-3">
+          <div className="font-display text-5xl font-bold leading-none">
+            {formatTime(s.startsAt)}
+            <span className="text-faint">–{formatTime(s.endsAt)}</span>
           </div>
-          <div className="pb-1 text-sm font-medium text-ink-2 first-letter:uppercase">{formatDate(s.startsAt)}</div>
-          {isTrainer && (
-            <Link href={`/trainer/clients/${s.clientId}`} className="ml-auto pb-1 text-sm font-semibold text-brand-700 hover:underline">
-              Карточка клиента →
-            </Link>
+          {s.phase === "upcoming" ? (
+            <div className="text-right">
+              <div className="text-[13px] font-semibold text-muted">До начала</div>
+              <Countdown to={s.startsAt.toISOString()} className="font-display text-2xl font-bold leading-none text-brand-500" />
+            </div>
+          ) : (
+            isTrainer && (
+              <Link href={`/trainer/clients/${s.clientId}`} className="press text-[15px] font-semibold text-brand-500">
+                Карточка клиента →
+              </Link>
+            )
           )}
         </div>
       </div>
       {flash && <Notice>{flash}</Notice>}
 
       {s.status === "SCHEDULED" && s.phase === "upcoming" && (
-        <Card title="Управление записью" icon={<CalendarClock size={15} />}>
+        <Card title="Запись">
           <SessionActions
             sessionId={s.id}
             role={actor.role}
@@ -105,7 +108,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
       )}
 
       {resultsAllowed && (
-        <Card title="Результаты тренировки" icon={<Dumbbell size={15} />}>
+        <Card title="Результаты">
           {isTrainer ? (
             editor
           ) : (
@@ -119,7 +122,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
 
       {/* Заметка: клиент видит итоговую, тренер может написать план до занятия */}
       {!resultsAllowed && isTrainer && s.status !== "CANCELLED" && (
-        <Card title="Заметка к тренировке">
+        <Card title="Заметка">
           <ActionForm action={updateSessionNotesAction.bind(null, s.id)}>
             <textarea name="notes" defaultValue={s.notes ?? ""} rows={3} maxLength={2000} placeholder="План, акценты, на что обратить внимание" className={inputClass} />
             <SubmitButton variant="secondary">Сохранить заметку</SubmitButton>
@@ -132,7 +135,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
         </Card>
       )}
 
-      <Link href={`${base}/schedule?week=${moscowDateString(s.startsAt)}`} className="inline-block text-sm text-muted hover:underline">
+      <Link href={`${base}/schedule?week=${moscowDateString(s.startsAt)}`} className="press inline-block text-[15px] font-medium text-brand-500">
         ← К расписанию
       </Link>
     </div>

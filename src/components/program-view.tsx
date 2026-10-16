@@ -1,3 +1,4 @@
+import { ClipboardList } from "lucide-react";
 import { Empty } from "./ui";
 import { fmtKg } from "./results-list";
 
@@ -11,29 +12,35 @@ export function ProgramView({ program }: { program: { name: string; description:
     if (last && last.day === it.dayLabel) last.items.push(it);
     else groups.push({ day: it.dayLabel, items: [it] });
   }
+  let n = 0;
   return (
-    <div className="space-y-4">
-      {program.description && <p className="whitespace-pre-line text-sm text-ink-2">{program.description}</p>}
-      {program.exercises.length === 0 && <Empty>В программе пока нет упражнений</Empty>}
+    <div className="space-y-6">
+      {program.description && <p className="max-w-prose text-[15px] text-muted">{program.description}</p>}
+      {program.exercises.length === 0 && <Empty icon={<ClipboardList size={26} strokeWidth={1.6} />}>В программе пока нет упражнений</Empty>}
       {groups.map((g, gi) => (
         <div key={gi}>
-          {g.day && <h3 className="mb-2 mt-1 text-xs font-bold uppercase tracking-[0.14em] text-brand-700">{g.day}</h3>}
-          <ol className="stagger space-y-2">
-            {g.items.map((it, idx) => (
-              <li key={it.id} className="flex gap-3 rounded-2xl border border-line bg-surface p-3.5 shadow-soft">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-sm font-extrabold text-brand-700">{idx + 1}</span>
-                <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="font-bold">{it.exercise.name}</span>
-                  <span className="rounded-full bg-subtle px-2.5 py-0.5 text-sm font-bold text-ink-2">
-                    {it.sets} × {it.reps}
-                    {it.weightKg != null && <> · {fmtKg(it.weightKg)} кг</>}
-                  </span>
-                </div>
-                {it.notes && <p className="mt-1 text-sm text-muted">{it.notes}</p>}
-                </div>
-              </li>
-            ))}
+          {g.day && (
+            <h3 className="mb-2 px-1 font-display text-[1.375rem] font-bold">{g.day}</h3>
+          )}
+          <ol className="stagger divide-y divide-line/60 rounded-3xl bg-surface px-4">
+            {g.items.map((it) => {
+              n++;
+              return (
+                <li key={it.id} className="grid grid-cols-[2rem_1fr_auto] items-center gap-x-3 py-3.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-subtle font-display text-[15px] font-bold text-muted">{n}</span>
+                  <div className="min-w-0">
+                    <div className="text-[17px] font-semibold">{it.exercise.name}</div>
+                    {it.notes && <p className="mt-0.5 text-sm text-muted">{it.notes}</p>}
+                  </div>
+                  <div className="text-right font-display leading-none">
+                    <div className="text-xl font-bold text-ring-green">
+                      {it.sets}×{it.reps}
+                    </div>
+                    {it.weightKg != null && <div className="mt-0.5 text-[13px] font-semibold text-muted">{fmtKg(it.weightKg)} кг</div>}
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </div>
       ))}

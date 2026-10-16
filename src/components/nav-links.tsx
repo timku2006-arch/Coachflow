@@ -9,51 +9,45 @@ const icons = { home: House, calendar: CalendarDays, users: Users, dumbbell: Dum
 export type IconName = keyof typeof icons;
 export type NavItem = { href: string; label: string; icon: IconName; exact?: boolean };
 
+/** Нижний таб-бар (телефон, планшет) и сегментированное меню (компьютер). */
 export function NavLinks({ items, variant }: { items: NavItem[]; variant: "top" | "bottom" }) {
   const pathname = usePathname();
-  const isActive = (i: NavItem) => (i.exact ? pathname === i.href : pathname === i.href || pathname.startsWith(i.href + "/"));
+  const active = items.findIndex((i) => (i.exact ? pathname === i.href : pathname === i.href || pathname.startsWith(i.href + "/")));
 
   if (variant === "top")
     return (
-      <ul className="flex gap-1 rounded-2xl bg-subtle p-1">
-        {items.map((i) => {
-          const Icon = icons[i.icon];
-          const active = isActive(i);
-          return (
-            <li key={i.href}>
-              <Link
-                href={i.href}
-                className={clsx(
-                  "flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold transition-all duration-200",
-                  active ? "bg-surface text-ink shadow-soft" : "text-muted hover:text-ink",
-                )}
-              >
-                <Icon size={16} strokeWidth={2.2} className={active ? "text-brand-600" : ""} />
-                {i.label}
-              </Link>
-            </li>
-          );
-        })}
+      <ul className="relative flex rounded-full bg-surface p-1">
+        {items.map((i, idx) => (
+          <li key={i.href}>
+            <Link
+              href={i.href}
+              className={clsx(
+                "press block rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors duration-300",
+                idx === active ? "bg-subtle-2 text-ink" : "text-muted hover:text-ink",
+              )}
+            >
+              {i.label}
+            </Link>
+          </li>
+        ))}
       </ul>
     );
 
   return (
-    <ul className="grid gap-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
-      {items.map((i) => {
+    <ul className="grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+      {items.map((i, idx) => {
         const Icon = icons[i.icon];
-        const active = isActive(i);
+        const on = idx === active;
         return (
           <li key={i.href}>
-            <Link href={i.href} className="group flex flex-col items-center gap-1 py-1.5 text-[10.5px] font-semibold">
-              <span
-                className={clsx(
-                  "flex h-8 w-12 items-center justify-center rounded-full transition-all duration-300 ease-out",
-                  active ? "bg-brand-gradient text-white shadow-glow" : "text-muted group-active:scale-90",
-                )}
-              >
-                <Icon size={19} strokeWidth={2.2} className={clsx("transition-transform duration-300", active && "scale-110")} />
-              </span>
-              <span className={clsx("transition-colors", active ? "text-ink" : "text-muted")}>{i.label}</span>
+            <Link href={i.href} className="flex flex-col items-center gap-1 pb-1 pt-2 active:opacity-60">
+              <Icon
+                key={on ? "on" : "off"}
+                size={24}
+                strokeWidth={on ? 2.3 : 1.8}
+                className={clsx("transition-colors duration-200", on ? "animate-pop text-brand-500" : "text-muted")}
+              />
+              <span className={clsx("text-[10px] font-medium", on ? "text-brand-500" : "text-muted")}>{i.label}</span>
             </Link>
           </li>
         );

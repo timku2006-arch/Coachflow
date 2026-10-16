@@ -7,7 +7,7 @@ import { Copy, Plus, X } from "lucide-react";
 import { inputClass } from "./input-class";
 
 const num =
-  "rounded-xl border border-line-strong bg-subtle px-2 py-2 text-center text-base font-bold text-ink outline-none transition focus:border-brand-500 focus:bg-surface focus:ring-4 focus:ring-brand-100 sm:text-sm";
+  "rounded-xl bg-subtle px-2 py-2.5 text-center font-display text-lg font-semibold leading-none text-ink outline-none transition-colors focus:bg-subtle-2 focus:ring-2 focus:ring-brand-500/60";
 
 export type EditorSet = { exerciseId: string; weightKg: string; reps: string };
 type Exercise = { id: string; name: string };
@@ -65,9 +65,9 @@ export function ResultsEditor({
           const first = i === 0 || sets[i - 1].exerciseId !== s.exerciseId;
           return (
             <li key={i} className={first ? "animate-rise pt-3" : "animate-rise"}>
-              {first && <div className="mb-1.5 text-sm font-extrabold">{name(s.exerciseId)}</div>}
+              {first && <div className="mb-2 text-[17px] font-semibold">{name(s.exerciseId)}</div>}
               <div className="flex items-center gap-2">
-                <span className="w-6 shrink-0 text-right text-xs text-muted">{numbered[i]}.</span>
+                <span className="w-6 shrink-0 text-right font-display text-[15px] font-semibold text-muted">{numbered[i]}</span>
                 <input
                   aria-label="Вес, кг"
                   inputMode="decimal"
@@ -81,16 +81,16 @@ export function ResultsEditor({
                 <input
                   aria-label="Повторения"
                   inputMode="numeric"
-                  placeholder="повт."
+                  placeholder="повт"
                   value={s.reps}
                   onChange={(e) => update(i, { reps: e.target.value })}
                   className={`w-16 ${num}`}
                   required
                 />
-                <button type="button" onClick={() => addSetAfter(i)} className="flex items-center gap-1 rounded-xl px-2 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 active:scale-95" title="Повторить подход">
+                <button type="button" onClick={() => addSetAfter(i)} className="press flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-brand-500 hover:bg-subtle" title="Повторить подход">
                   <Copy size={13} /> подход
                 </button>
-                <button type="button" onClick={() => remove(i)} className="ml-auto flex h-8 w-8 items-center justify-center rounded-xl text-muted transition hover:bg-red-50 hover:text-red-600 active:scale-90" aria-label="Удалить подход">
+                <button type="button" onClick={() => remove(i)} className="press ml-auto flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-red-600/15 hover:text-red-600" aria-label="Удалить подход">
                   <X size={16} />
                 </button>
               </div>
@@ -112,8 +112,8 @@ export function ResultsEditor({
         </button>
       </div>
       <label className="block">
-        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">Заметка по тренировке</span>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className="w-full rounded-xl border border-line-strong px-3 py-2 text-base sm:text-sm" />
+        <span className="mb-1.5 block text-[13px] font-semibold text-muted">Заметка по тренировке</span>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className={inputClass} />
       </label>
       <SubmitButton className="w-full sm:w-auto">{completed ? "Сохранить изменения" : "Сохранить результаты"}</SubmitButton>
     </ActionForm>

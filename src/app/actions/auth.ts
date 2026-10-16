@@ -17,7 +17,7 @@ export async function loginAction(_: FormState, fd: FormData): Promise<FormState
       throw new AppError("UNAUTHORIZED", "Неверный email или пароль");
     }
     await startSession(user.id, user.role);
-    redirect(user.mustChangePassword ? "/change-password" : homeFor(user.role));
+    redirect(user.mustChangePassword ? "/change-password" : `${homeFor(user.role)}?hello=1`);
   });
 }
 
@@ -59,7 +59,7 @@ export async function changePasswordAction(_: FormState, fd: FormData): Promise<
       where: { id: user.id },
       data: { passwordHash: await hashPassword(data.newPassword), mustChangePassword: false },
     });
-    redirect(homeFor(user.role));
+    redirect(`${homeFor(user.role)}?hello=1`);
   });
 }
 

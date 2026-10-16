@@ -83,8 +83,8 @@ function usePush(publicKey: string) {
 
 function IosInstallHint() {
   return (
-    <div className="rounded-2xl bg-subtle p-4 text-sm">
-      <p className="font-bold">Чтобы получать уведомления на iPhone</p>
+    <div className="rounded-2xl bg-subtle p-4 text-[15px]">
+      <p className="font-semibold">Чтобы получать уведомления на iPhone</p>
       <ol className="mt-2 space-y-1.5 text-ink-2">
         <li className="flex items-center gap-2">
           1. Нажмите <Share size={16} className="text-brand-600" /> «Поделиться» в Safari
@@ -111,7 +111,7 @@ export function PushSetup({ publicKey }: { publicKey: string }) {
       {state === "ios-install" && <IosInstallHint />}
       {state === "unsupported" && <p className="text-sm text-muted">Этот браузер не поддерживает push-уведомления. Уведомления будут видны в приложении.</p>}
       {state === "denied" && (
-        <p className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-900">
+        <p className="rounded-2xl bg-amber-50 p-3 text-[14px] text-amber-800">
           Уведомления запрещены в настройках. Разрешите их для CoachFlow в настройках телефона (Настройки → Уведомления), затем обновите страницу.
         </p>
       )}
@@ -122,7 +122,7 @@ export function PushSetup({ publicKey }: { publicKey: string }) {
       )}
       {state === "subscribed" && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-3 py-2 text-[14px] font-semibold text-brand-500">
             <Bell size={15} /> Уведомления включены
           </span>
           <button
@@ -167,28 +167,28 @@ export function PushPrompt({ publicKey }: { publicKey: string }) {
     } catch {}
   };
   return (
-    <div className="relative mb-4 animate-rise overflow-hidden rounded-3xl border border-brand-200 bg-brand-50 p-4">
-      <button onClick={dismiss} className="absolute right-3 top-3 rounded-lg p-1 text-muted hover:bg-surface" aria-label="Скрыть">
+    <div className="relative mb-5 animate-pop overflow-hidden rounded-3xl bg-surface p-4">
+      <button onClick={dismiss} className="press absolute right-3 top-3 rounded-full bg-subtle p-1 text-muted hover:text-ink" aria-label="Скрыть">
         <X size={16} />
       </button>
       <div className="flex gap-3 pr-6">
-        <span className="flex h-10 w-10 shrink-0 animate-pulse-ring items-center justify-center rounded-2xl bg-brand-gradient text-white">
-          <BellRing size={19} />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ring-red text-white">
+          <BellRing size={19} className="origin-top animate-[ring_1.2s_ease-in-out_0.8s_3]" />
         </span>
         <div className="min-w-0">
-          <p className="font-bold">Включите уведомления</p>
-          <p className="text-sm text-ink-2">Напоминания о тренировках, переносы, отмены и новые результаты — сразу на телефон.</p>
+          <p className="text-[17px] font-semibold">Включите уведомления</p>
+          <p className="mt-0.5 text-[14px] text-muted">Напоминания о тренировках, переносы, отмены и новые результаты — сразу на телефон.</p>
         </div>
       </div>
       <div className="mt-3">
         {state === "ios-install" ? (
           <IosInstallHint />
         ) : (
-          <button className={buttonClass("primary")} disabled={pending} onClick={() => start(enable)}>
+          <button className={buttonClass("primary") + " w-full sm:w-auto"} disabled={pending} onClick={() => start(enable)}>
             Включить
           </button>
         )}
-        {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+        {error && <p className="mt-2 text-[14px] text-red-700">{error}</p>}
       </div>
     </div>
   );

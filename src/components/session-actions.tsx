@@ -38,22 +38,22 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
   return (
     <div className="space-y-3">
       {flash && (
-        <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p role="status" className="animate-pop rounded-xl bg-brand-500/15 px-4 py-3 text-[15px] text-brand-300">
           {flash}
         </p>
       )}
       {role === "TRAINER" && (
-        <p className="text-xs text-muted">Тренер может переносить и отменять занятия в любое время.</p>
+        <p className="text-[13px] text-muted">Тренер может переносить и отменять занятия в любое время.</p>
       )}
       {mode === "reschedule" ? (
-        <ActionForm action={rescheduleSessionAction.bind(null, sessionId)} onState={onState} className="animate-rise rounded-2xl bg-subtle p-3">
+        <ActionForm action={rescheduleSessionAction.bind(null, sessionId)} onState={onState} className="animate-pop rounded-2xl bg-subtle p-4">
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-ink-2">Новая дата</span>
+              <span className="mb-1.5 block text-[13px] font-semibold text-muted">Новая дата</span>
               <input name="date" type="date" required defaultValue={defaultDate} className={inputClass} />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-ink-2">Время (МСК)</span>
+              <span className="mb-1.5 block text-[13px] font-semibold text-muted">Время (МСК)</span>
               <input name="time" type="time" step={900} required defaultValue={defaultTime} className={inputClass} />
             </label>
           </div>
@@ -82,14 +82,14 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
 
 export function LockedNotice({ telegramUrl }: { telegramUrl: string | null }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+    <div className="animate-pop rounded-3xl bg-surface p-4">
       <div className="flex gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
           <Clock3 size={20} />
         </span>
         <div>
-          <p className="font-bold">До начала осталось {CLIENT_CHANGE_WINDOW_HOURS} часа или меньше</p>
-          <p className="mt-0.5 text-amber-800">Перенести или отменить занятие самостоятельно уже нельзя. Напишите тренеру — он поможет.</p>
+          <p className="text-[15px] font-semibold">До начала {CLIENT_CHANGE_WINDOW_HOURS} часа или меньше</p>
+          <p className="mt-0.5 text-[14px] text-muted">Перенести или отменить занятие самостоятельно уже нельзя. Напишите тренеру — он поможет.</p>
         </div>
       </div>
       {telegramUrl ? (
@@ -97,12 +97,12 @@ export function LockedNotice({ telegramUrl }: { telegramUrl: string | null }) {
           href={telegramUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_30px_-10px_rgb(14_165_233_/_0.7)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98] sm:w-auto"
+          className="press mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2aabee] px-4 py-3 text-[15px] font-semibold text-white hover:brightness-110"
         >
           <Send size={17} /> Написать тренеру в Telegram
         </a>
       ) : (
-        <p className="mt-3 text-amber-800">Тренер пока не указал Telegram — свяжитесь с ним удобным способом.</p>
+        <p className="mt-3 text-[14px] text-muted">Тренер пока не указал Telegram — свяжитесь с ним удобным способом.</p>
       )}
     </div>
   );

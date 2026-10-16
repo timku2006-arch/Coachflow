@@ -13,14 +13,14 @@ export default async function RegisterPage() {
     return (
       <div className="space-y-4 text-sm text-ink-2">
         <p>Тренер уже зарегистрирован. Клиентов создаёт тренер в своём кабинете.</p>
-        <Link href="/login" className="font-medium text-brand-700 hover:underline">
+        <Link href="/login" className="font-semibold text-brand-500 hover:opacity-80">
           Перейти ко входу
         </Link>
       </div>
     );
   return (
     <>
-      <h1 className="mb-1 text-xl font-extrabold tracking-tight">Регистрация тренера</h1>
+      <h1 className="mb-1 font-display text-[1.375rem] font-bold">Регистрация тренера</h1>
       <p className="mb-4 text-sm text-muted">Клиенты получат доступ от вас — их регистрировать не нужно.</p>
       <ActionForm action={registerTrainerAction}>
         <Field label="Имя">

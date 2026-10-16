@@ -15,7 +15,7 @@ export default async function TrainerLayout({ children }: { children: ReactNode 
   const { user } = await requireTrainer();
   const unread = await unreadCount(user.id);
   return (
-    <AppShell items={items} userName={user.name} home="/trainer" unread={unread}>
+    <AppShell items={items} userName={user.name} roleLabel="Тренер" home="/trainer" unread={unread}>
       {children}
     </AppShell>
   );

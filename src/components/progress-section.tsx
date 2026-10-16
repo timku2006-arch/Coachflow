@@ -3,12 +3,11 @@ import { getClient } from "@/server/services/clients";
 import { exerciseProgress } from "@/server/services/progress";
 import { dateOnlyToString, formatDate, moscowDateString } from "@/lib/time";
 import { BodyWeightChart, ExerciseCharts } from "./charts";
-import { Card, Field, Input, Stat } from "./ui";
+import { Card, Field, Input } from "./ui";
 import { ActionForm, SubmitButton } from "./form";
 import { addBodyWeightAction, deleteBodyWeightAction } from "@/app/actions/sessions";
 import { fmtKg } from "./results-list";
-import { CountUp } from "./count-up";
-import { Dumbbell, Scale } from "lucide-react";
+import { Digits } from "./digits";
 
 /** Прогресс клиента: вес тела и рабочие веса. Используется и тренером, и клиентом. */
 export async function ProgressSection({ actor, clientId }: { actor: Actor; clientId: string }) {
@@ -18,19 +17,36 @@ export async function ProgressSection({ actor, clientId }: { actor: Actor; clien
   const first = weights[0];
   const bmi = last && client.heightCm ? last.weightKg / (client.heightCm / 100) ** 2 : null;
   return (
-    <div className="stagger grid gap-4 lg:grid-cols-2">
-      <Card title="Вес тела" icon={<Scale size={15} />}>
+    <div className="stagger grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <Card title="Вес тела">
         <div className="mb-3 grid grid-cols-3 gap-2">
-          <Stat tone="brand" label="Сейчас" value={last ? <CountUp value={last.weightKg} decimals={1} /> : "—"} unit={last ? "кг" : undefined} />
-          <Stat
-            label="Изменение"
-            value={last && first ? <>{last.weightKg - first.weightKg >= 0 ? "+" : "−"}<CountUp value={Math.abs(+(last.weightKg - first.weightKg).toFixed(1))} decimals={1} /></> : "—"}
-            unit={last ? "кг" : undefined}
-          />
-          <Stat label="ИМТ" value={bmi ? <CountUp value={+bmi.toFixed(1)} decimals={1} /> : "—"} />
+          <div>
+            <div className="text-[13px] font-semibold text-ink">Сейчас</div>
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-green">
+              {last ? <Digits value={last.weightKg} decimals={1} /> : "—"}
+              <span className="text-[15px]">{last ? "кг" : ""}</span>
+            </div>
+          </div>
+          <div>
+            <div className="text-[13px] font-semibold text-ink">Изменение</div>
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-blue">
+              {last && first ? (
+                <>
+                  {last.weightKg - first.weightKg >= 0 ? "+" : "−"}
+                  <Digits value={Math.abs(+(last.weightKg - first.weightKg).toFixed(1))} decimals={1} />
+                </>
+              ) : (
+                "—"
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-[13px] font-semibold text-ink">ИМТ</div>
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-red">{bmi ? <Digits value={+bmi.toFixed(1)} decimals={1} /> : "—"}</div>
+          </div>
         </div>
         <BodyWeightChart points={weights.map((w) => ({ date: `${w.date}T12:00:00Z`, weightKg: w.weightKg }))} />
-        <ActionForm action={addBodyWeightAction.bind(null, clientId)} className="mt-4 border-t border-line pt-4">
+        <ActionForm action={addBodyWeightAction.bind(null, clientId)} className="mt-4 border-t border-line/60 pt-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Дата">
               <Input name="date" type="date" required defaultValue={moscowDateString(new Date())} />
@@ -43,8 +59,8 @@ export async function ProgressSection({ actor, clientId }: { actor: Actor; clien
         </ActionForm>
         {weights.length > 0 && (
           <details className="mt-3 text-sm">
-            <summary className="cursor-pointer text-muted">Все записи ({weights.length})</summary>
-            <ul className="mt-2 divide-y divide-line">
+            <summary className="cursor-pointer text-[15px] font-medium text-brand-500">Все записи ({weights.length})</summary>
+            <ul className="mt-2 divide-y divide-line/60">
               {[...weights].reverse().map((w) => (
                 <li key={w.id} className="flex items-center justify-between py-1.5">
                   <span>{formatDate(new Date(`${w.date}T12:00:00Z`))}</span>
@@ -60,7 +76,7 @@ export async function ProgressSection({ actor, clientId }: { actor: Actor; clien
           </details>
         )}
       </Card>
-      <Card title="Рабочие веса" icon={<Dumbbell size={15} />}>
+      <Card title="Рабочие веса">
         <ExerciseCharts series={series} />
       </Card>
     </div>

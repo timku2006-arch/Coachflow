@@ -2,62 +2,58 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Bell } from "lucide-react";
 import clsx from "clsx";
-import { LogoutButton } from "./logout-button";
-import { Logo } from "./logo";
+import { Wordmark } from "./logo";
 import { NavLinks, type NavItem } from "./nav-links";
-import { Avatar } from "./ui";
+import { UserMenu } from "./user-menu";
 
 export function AppShell({
   items,
   userName,
+  roleLabel,
   home,
   unread = 0,
   children,
 }: {
   items: NavItem[];
   userName: string;
+  roleLabel: string;
   home: string;
   unread?: number;
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-dvh pb-28 md:pb-10">
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/75 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4">
-          <Link href={home} className="flex items-center gap-2.5 text-[1.05rem] font-extrabold tracking-tight">
-            <Logo className="h-8 w-8 transition-transform duration-300 hover:rotate-[-8deg] hover:scale-105" />
-            <span>
-              Coach<span className="text-brand-gradient">Flow</span>
-            </span>
+    <div className="min-h-dvh pb-28 lg:pb-12">
+      <header className="sticky top-0 z-30 bg-canvas/70 pt-[env(safe-area-inset-top)] backdrop-blur-xl backdrop-saturate-150">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-4 px-4">
+          <Link href={home} className="press shrink-0 text-lg" aria-label="CoachFlow — на главную">
+            <Wordmark />
           </Link>
-          <nav className="mx-auto hidden md:block">
+          <nav className="mx-auto hidden min-w-0 lg:block">
             <NavLinks items={items} variant="top" />
           </nav>
-          <div className="ml-auto flex items-center gap-2 md:ml-0">
-            <span className="hidden items-center gap-2 sm:flex">
-              <Avatar name={userName} size="sm" />
-              <span className="max-w-36 truncate text-sm font-semibold text-ink-2">{userName}</span>
-            </span>
+          <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
             <Link
               href={`${home}/notifications`}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted transition hover:bg-subtle hover:text-ink active:scale-90"
+              className="press relative flex h-9 w-9 items-center justify-center rounded-full bg-surface text-ink hover:bg-subtle"
               aria-label={unread ? `Уведомления: ${unread} новых` : "Уведомления"}
               title="Уведомления"
             >
-              <Bell size={19} className={clsx(unread > 0 && "origin-top animate-[ring_1.2s_ease-in-out_2] text-ink")} />
+              <Bell size={18} className={clsx(unread > 0 && "origin-top animate-[ring_1.2s_ease-in-out_2]")} />
               {unread > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] animate-pop items-center justify-center rounded-full bg-brand-gradient px-1 text-[10px] font-extrabold text-white ring-2 ring-canvas">
+                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] animate-pop items-center justify-center rounded-full bg-ring-red px-1 text-[11px] font-bold text-white">
                   {unread > 99 ? "99+" : unread}
                 </span>
               )}
             </Link>
-            <LogoutButton />
+            <UserMenu name={userName} roleLabel={roleLabel} profileHref={`${home}/profile`} />
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
-      <nav className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-30 rounded-[1.75rem] border border-line/80 bg-surface/85 px-1.5 py-1 shadow-lift backdrop-blur-xl md:hidden">
-        <NavLinks items={items} variant="bottom" />
+      <main className="mx-auto max-w-5xl px-4 pb-6 pt-3">{children}</main>
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#121212]/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden">
+        <div className="mx-auto max-w-lg">
+          <NavLinks items={items} variant="bottom" />
+        </div>
       </nav>
     </div>
   );

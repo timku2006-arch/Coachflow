@@ -15,7 +15,7 @@ export default async function LoginPage() {
   const hasTrainer = (await prisma.trainerProfile.count()) > 0;
   return (
     <>
-      <h1 className="mb-5 text-xl font-extrabold tracking-tight">Вход</h1>
+      <h1 className="mb-4 font-display text-[1.375rem] font-bold">Вход</h1>
       <ActionForm action={loginAction}>
         <Field label="Email">
           <Input name="email" type="email" autoComplete="email" required />
@@ -29,7 +29,7 @@ export default async function LoginPage() {
         {hasTrainer ? (
           "Нет аккаунта? Попросите тренера создать его для вас."
         ) : (
-          <Link href="/register" className="font-medium text-brand-700 hover:underline">
+          <Link href="/register" className="font-semibold text-brand-500 hover:opacity-80">
             Зарегистрироваться как тренер
           </Link>
         )}

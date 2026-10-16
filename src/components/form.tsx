@@ -51,13 +51,13 @@ export function ActionForm({
 export function FormMessage({ state }: { state: FormState }) {
   if (state.error)
     return (
-      <p role="alert" className="animate-rise rounded-2xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700">
+      <p role="alert" className="animate-pop rounded-xl bg-red-600/15 px-4 py-3 text-[15px] text-red-700">
         {state.error}
       </p>
     );
   if (state.ok && state.message)
     return (
-      <p role="status" className="animate-rise rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">
+      <p role="status" className="animate-pop rounded-xl bg-brand-500/15 px-4 py-3 text-[15px] text-brand-300">
         {state.message}
       </p>
     );

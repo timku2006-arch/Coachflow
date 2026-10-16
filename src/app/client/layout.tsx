@@ -15,7 +15,7 @@ export default async function ClientLayout({ children }: { children: ReactNode }
   const { user } = await requireClient();
   const unread = await unreadCount(user.id);
   return (
-    <AppShell items={items} userName={user.name} home="/client" unread={unread}>
+    <AppShell items={items} userName={user.name} roleLabel="Клиент" home="/client" unread={unread}>
       {children}
     </AppShell>
   );

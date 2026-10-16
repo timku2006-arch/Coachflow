@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { LogOut } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 
 /** Выход: заодно отвязывает push-подписку этого устройства. */
-export function LogoutButton() {
+export function LogoutButton({ className, children }: { className?: string; children?: ReactNode }) {
   const endpoint = useRef<HTMLInputElement>(null);
   return (
     <form
@@ -24,8 +24,12 @@ export function LogoutButton() {
       }}
     >
       <input ref={endpoint} type="hidden" name="endpoint" defaultValue="" />
-      <button className="flex h-9 w-9 items-center justify-center rounded-xl text-muted transition hover:bg-subtle hover:text-ink active:scale-90" aria-label="Выйти" title="Выйти">
-        <LogOut size={18} />
+      <button className={className}>
+        {children ?? (
+          <>
+            <LogOut size={18} /> Выйти
+          </>
+        )}
       </button>
     </form>
   );
