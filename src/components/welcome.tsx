@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Rings } from "./rings";
+import { FlowWaves } from "./flow-waves";
 
 /**
- * Приветствие сразу после входа: кольца замыкаются, появляется имя,
- * затем экран плавно растворяется и открывает приложение.
+ * Приветствие сразу после входа: по экрану пробегают волны,
+ * появляется имя, затем всё растворяется и открывает приложение.
  */
 export function Welcome({ show, name, line }: { show: boolean; name: string; line: string }) {
   const [visible, setVisible] = useState(show);
@@ -26,22 +26,17 @@ export function Welcome({ show, name, line }: { show: boolean; name: string; lin
   return createPortal(
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-50 flex animate-[fade-out_0.6s_cubic-bezier(0.22,1,0.36,1)_2.05s_both] flex-col items-center justify-center bg-black px-6 text-center"
+      className="pointer-events-none fixed inset-0 z-50 flex animate-[fade-out_0.6s_cubic-bezier(0.22,1,0.36,1)_2.05s_both] flex-col justify-center bg-canvas px-7"
     >
-      <Rings
-        size={200}
-        rings={[
-          { value: 1, max: 1, color: "red" },
-          { value: 1, max: 1, color: "green" },
-          { value: 1, max: 1, color: "blue" },
-        ]}
-        delay={0.1}
-      />
-      <div className="mt-8 animate-rise text-[13px] font-semibold uppercase tracking-wide text-muted [animation-delay:0.7s]">{line}</div>
-      <div className="mt-1 animate-rise font-display text-[2rem] font-bold leading-tight [animation-delay:0.85s] sm:text-[2.5rem]">
-        <span className="whitespace-nowrap">С возвращением,</span>
-        <br />
-        <span className="bg-gradient-to-r from-ring-red via-ring-green to-ring-blue bg-clip-text text-transparent">{name}</span>
+      <FlowWaves className="absolute inset-x-0 top-[64%] h-44 opacity-60" />
+      <div className="relative">
+        <div className="animate-rise text-[14px] font-semibold text-muted first-letter:uppercase [animation-delay:0.5s]">{line}</div>
+        <div className="mt-2 animate-rise font-display text-[2.4rem] font-semibold leading-[1.08] [animation-delay:0.65s] sm:text-6xl">
+          Привет,
+          <br />
+          <span className="text-flow">{name}</span>
+        </div>
+        <div className="mt-3 animate-rise text-[15px] text-ink-2 [animation-delay:0.85s]">Поехали ✦</div>
       </div>
     </div>,
     document.body,

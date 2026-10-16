@@ -51,7 +51,7 @@ export function ActionForm({
 export function FormMessage({ state }: { state: FormState }) {
   if (state.error)
     return (
-      <p role="alert" className="animate-pop rounded-xl bg-red-600/15 px-4 py-3 text-[15px] text-red-700">
+      <p role="alert" className="animate-pop rounded-2xl bg-coral/12 px-4 py-3 text-[15px] text-coral">
         {state.error}
       </p>
     );

@@ -9,7 +9,7 @@ const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "Europe/Moscow" });
 const kg = (v: number) => `${v.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} кг`;
 
-function Chart({ data, dataKey, label, color = "#a3f93b" }: { data: Record<string, number | string>[]; dataKey: string; label: string; color?: string }) {
+function Chart({ data, dataKey, label, color = "#3ef2c5" }: { data: Record<string, number | string>[]; dataKey: string; label: string; color?: string }) {
   const gid = useId().replace(/:/g, "");
   const values = data.map((d) => Number(d[dataKey]));
   const min = Math.min(...values);
@@ -25,15 +25,15 @@ function Chart({ data, dataKey, label, color = "#a3f93b" }: { data: Record<strin
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="#38383a" strokeDasharray="2 4" vertical={false} />
-          <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11, fill: "#8e8e93" }} tickLine={false} axisLine={false} minTickGap={24} />
-          <YAxis domain={[Math.floor(min - pad), Math.ceil(max + pad)]} tick={{ fontSize: 11, fill: "#8e8e93" }} tickLine={false} axisLine={false} width={44} />
+          <CartesianGrid stroke="#232a3a" strokeDasharray="2 4" vertical={false} />
+          <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11, fill: "#8a93a8" }} tickLine={false} axisLine={false} minTickGap={24} />
+          <YAxis domain={[Math.floor(min - pad), Math.ceil(max + pad)]} tick={{ fontSize: 11, fill: "#8a93a8" }} tickLine={false} axisLine={false} width={44} />
           <Tooltip
             cursor={{ stroke: "#ffffff", strokeOpacity: 0.25, strokeWidth: 1 }}
             labelFormatter={(v) => shortDate(String(v))}
             formatter={(v) => [kg(Number(v)), label]}
-            contentStyle={{ borderRadius: 14, border: "none", background: "#2c2c2e", color: "#ffffff", fontSize: 13, boxShadow: "0 20px 40px -10px rgb(0 0 0 / .7)" }}
-            labelStyle={{ color: "#8e8e93", fontWeight: 600 }}
+            contentStyle={{ borderRadius: 14, border: "none", background: "#1b2130", color: "#ffffff", fontSize: 13, boxShadow: "0 20px 40px -10px rgb(0 0 0 / .7)" }}
+            labelStyle={{ color: "#8a93a8", fontWeight: 600 }}
           />
           <Area
             type="monotone"
@@ -43,7 +43,7 @@ function Chart({ data, dataKey, label, color = "#a3f93b" }: { data: Record<strin
             strokeLinecap="round"
             fill={`url(#fill-${gid})`}
             dot={{ r: 0 }}
-            activeDot={{ r: 6, fill: color, stroke: "#1c1c1e", strokeWidth: 3 }}
+            activeDot={{ r: 6, fill: color, stroke: "#131823", strokeWidth: 3 }}
             animationDuration={1400}
             animationEasing="ease-out"
           />
@@ -55,7 +55,7 @@ function Chart({ data, dataKey, label, color = "#a3f93b" }: { data: Record<strin
 
 export function BodyWeightChart({ points }: { points: { date: string; weightKg: number }[] }) {
   if (points.length < 2) return <p className="py-6 text-center text-sm text-muted">Добавьте минимум две записи веса, чтобы увидеть график.</p>;
-  return <Chart data={points} dataKey="weightKg" label="Вес" color="#1ee5ff" />;
+  return <Chart data={points} dataKey="weightKg" label="Вес" color="#a99bff" />;
 }
 
 export function ExerciseCharts({ series }: { series: ExerciseSeries[] }) {
@@ -87,12 +87,12 @@ export function ExerciseCharts({ series }: { series: ExerciseSeries[] }) {
         <div className="mb-2 flex items-end justify-between gap-2">
           <div>
             <div className="text-[13px] font-semibold">Рабочий вес</div>
-            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-green">
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-mint">
               {kg(last.maxWeightKg)} <span className="text-lg text-muted">× {last.repsAtMax}</span>
             </div>
           </div>
           {current!.points.length > 1 && (
-            <span className={clsx("rounded-full px-2.5 py-1 text-[13px] font-semibold", delta >= 0 ? "bg-brand-500/15 text-brand-500" : "bg-ring-red/15 text-ring-red")}>
+            <span className={clsx("rounded-full px-2.5 py-1 text-[13px] font-semibold", delta >= 0 ? "bg-brand-500/15 text-mint" : "bg-coral/15 text-coral")}>
               {delta >= 0 ? "▲ +" : "▼ "}
               {kg(delta)}
             </span>
@@ -101,7 +101,7 @@ export function ExerciseCharts({ series }: { series: ExerciseSeries[] }) {
       )}
       <div key={selected} className="animate-page">
         {current && current.points.length >= 2 ? (
-          <Chart data={current.points} dataKey="maxWeightKg" label="Рабочий вес" color="#a3f93b" />
+          <Chart data={current.points} dataKey="maxWeightKg" label="Рабочий вес" color="#3ef2c5" />
         ) : (
           <p className="py-6 text-center text-sm text-muted">По этому упражнению пока одна тренировка.</p>
         )}

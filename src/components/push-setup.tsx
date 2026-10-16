@@ -122,7 +122,7 @@ export function PushSetup({ publicKey }: { publicKey: string }) {
       )}
       {state === "subscribed" && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-3 py-2 text-[14px] font-semibold text-brand-500">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-3 py-2 text-[14px] font-semibold text-mint">
             <Bell size={15} /> Уведомления включены
           </span>
           <button
@@ -167,12 +167,12 @@ export function PushPrompt({ publicKey }: { publicKey: string }) {
     } catch {}
   };
   return (
-    <div className="relative mb-5 animate-pop overflow-hidden rounded-3xl bg-surface p-4">
+    <div className="relative mb-5 animate-pop overflow-hidden glass rounded-3xl p-4">
       <button onClick={dismiss} className="press absolute right-3 top-3 rounded-full bg-subtle p-1 text-muted hover:text-ink" aria-label="Скрыть">
         <X size={16} />
       </button>
       <div className="flex gap-3 pr-6">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ring-red text-white">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-mint to-lilac text-[#0a0d14]">
           <BellRing size={19} className="origin-top animate-[ring_1.2s_ease-in-out_0.8s_3]" />
         </span>
         <div className="min-w-0">

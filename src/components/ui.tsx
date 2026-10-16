@@ -13,9 +13,14 @@ export function PageHeader({ title, subtitle, action, eyebrow }: { title: ReactN
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-0.5 animate-rise text-[13px] font-semibold uppercase tracking-wide text-muted">{eyebrow}</div>}
-        <h1 className="animate-rise font-display text-[2.125rem] font-bold leading-tight [animation-delay:0.04s] sm:text-[2.5rem]">{title}</h1>
-        {subtitle && <div className="mt-1 animate-rise text-[15px] text-muted [animation-delay:0.1s]">{subtitle}</div>}
+        {eyebrow && (
+          <div className="mb-2 inline-flex animate-rise items-center gap-2 rounded-full bg-surface px-3 py-1 text-[12px] font-semibold text-muted ring-1 ring-inset ring-white/5 first-letter:uppercase">
+            <span className="h-1.5 w-1.5 animate-blink rounded-full bg-mint" />
+            {eyebrow}
+          </div>
+        )}
+        <h1 className="animate-rise font-display text-[1.85rem] font-semibold leading-[1.1] [animation-delay:0.04s] sm:text-[2.4rem]">{title}</h1>
+        {subtitle && <div className="mt-1.5 animate-rise text-[15px] text-muted [animation-delay:0.1s]">{subtitle}</div>}
       </div>
       {action && <div className="animate-rise [animation-delay:0.12s]">{action}</div>}
     </div>
@@ -29,6 +34,7 @@ export function Card({
   children,
   className,
   icon,
+  id,
 }: {
   title?: ReactNode;
   action?: ReactNode;
@@ -36,21 +42,22 @@ export function Card({
   className?: string;
   icon?: ReactNode;
   index?: string;
+  id?: string;
 }) {
   return (
-    <section className={clsx("min-w-0", className)}>
+    <section id={id} className={clsx("min-w-0 scroll-mt-24", className)}>
       {(title || action) && (
-        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
           {title && (
-            <h2 className="flex items-center gap-2 font-display text-[1.375rem] font-bold leading-tight">
-              {icon && <span className="text-brand-500">{icon}</span>}
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">
+              {icon && <span className="text-mint">{icon}</span>}
               {title}
             </h2>
           )}
           {action}
         </div>
       )}
-      <div className="rounded-3xl bg-surface p-4">{children}</div>
+      <div className="glass rounded-3xl p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -62,7 +69,7 @@ export function LinkButton({ variant = "primary", className, ...props }: Compone
 /** Ссылка «Показать все» в шапке секции */
 export function MoreLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="press inline-flex items-center gap-0.5 text-[15px] font-medium text-brand-500 hover:opacity-80">
+    <Link href={href} className="press inline-flex items-center gap-0.5 text-[14px] font-semibold text-mint hover:opacity-80">
       {children}
       <ChevronRight size={16} />
     </Link>
@@ -99,17 +106,17 @@ export function Select(props: ComponentProps<"select">) {
 }
 
 const phaseStyles: Record<SessionPhase, { text: string; dot: string }> = {
-  upcoming: { text: "text-ring-blue", dot: "bg-ring-blue" },
-  in_progress: { text: "text-brand-500", dot: "bg-brand-500 animate-blink" },
-  awaiting_results: { text: "text-ring-red", dot: "bg-ring-red" },
-  completed: { text: "text-brand-500", dot: "bg-brand-500" },
-  cancelled: { text: "text-muted line-through", dot: "bg-faint" },
+  upcoming: { text: "text-lilac bg-lilac/12", dot: "bg-lilac" },
+  in_progress: { text: "text-mint bg-mint/12", dot: "bg-mint animate-blink" },
+  awaiting_results: { text: "text-coral bg-coral/12", dot: "bg-coral" },
+  completed: { text: "text-mint bg-mint/12", dot: "bg-mint" },
+  cancelled: { text: "text-muted bg-subtle line-through", dot: "bg-faint" },
 };
 
 export function PhaseBadge({ phase }: { phase: SessionPhase }) {
   const s = phaseStyles[phase];
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold", s.text)}>
+    <span className={clsx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[12px] font-semibold", s.text)}>
       <span className={clsx("h-2 w-2 rounded-full", s.dot)} />
       {phaseLabel[phase]}
     </span>
@@ -141,11 +148,15 @@ export function Stat({
   color?: "red" | "green" | "blue";
 }) {
   const c = color ?? (tone === "brand" ? "green" : undefined);
-  const cls = c === "red" ? "text-ring-red" : c === "green" ? "text-ring-green" : c === "blue" ? "text-ring-blue" : "text-ink";
+  const cls = c === "red" ? "text-coral" : c === "green" ? "text-mint" : c === "blue" ? "text-lilac" : "text-ink";
+  const dot = c === "red" ? "bg-coral" : c === "green" ? "bg-mint" : c === "blue" ? "bg-lilac" : "bg-muted";
   return (
-    <div className="rounded-3xl bg-surface p-4">
-      <div className="text-[13px] font-semibold text-ink">{label}</div>
-      <div className={clsx("mt-1 font-display text-[2rem] font-bold leading-none", cls)}>
+    <div className="glass rounded-3xl p-4">
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-muted">
+        <span className={clsx("h-2 w-2 rounded-full", dot)} />
+        {label}
+      </div>
+      <div className={clsx("mt-2 font-display text-[1.9rem] font-semibold leading-none", cls)}>
         {value}
         {unit && <span className="ml-0.5 text-base font-semibold">{unit}</span>}
       </div>
@@ -153,8 +164,11 @@ export function Stat({
   );
 }
 
-/** Монограмма в круге — как в «Контактах». */
+const avatarTones = ["from-mint/90 to-lilac/90", "from-lilac/90 to-coral/90", "from-coral/90 to-mint/80"];
+
+/** Монограмма в «капле» цветов бренда. */
 export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg"; accent?: boolean }) {
+  const hash = [...name].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -164,7 +178,8 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md"
   return (
     <span
       className={clsx(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#5a5a5f] font-display font-semibold leading-none text-white",
+        "inline-flex shrink-0 items-center justify-center rounded-[38%] bg-gradient-to-br font-display font-semibold leading-none text-[#0a0d14]",
+        avatarTones[hash % avatarTones.length],
         size === "sm" && "h-8 w-8 text-[13px]",
         size === "md" && "h-11 w-11 text-base",
         size === "lg" && "h-16 w-16 text-2xl",
@@ -181,8 +196,8 @@ export function Notice({ tone = "success", children }: { tone?: "success" | "inf
     <div
       className={clsx(
         "mb-5 animate-pop rounded-2xl px-4 py-3 text-[15px]",
-        tone === "success" && "bg-brand-500/15 text-brand-300",
-        tone === "info" && "bg-ring-blue/15 text-ring-blue",
+        tone === "success" && "bg-mint/12 text-brand-300",
+        tone === "info" && "bg-lilac/15 text-lilac",
         tone === "warning" && "bg-amber-50 text-amber-800",
       )}
     >

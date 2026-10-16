@@ -31,7 +31,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
         }
         action={
           program.isActive ? (
-            <span className="rounded-full bg-brand-500/15 px-3 py-1.5 text-[14px] font-semibold text-brand-500">Текущая программа</span>
+            <span className="rounded-full bg-brand-500/15 px-3 py-1.5 text-[14px] font-semibold text-mint">Текущая программа</span>
           ) : (
             <ActionForm action={activateProgramAction.bind(null, id)}>
               <SubmitButton variant="secondary">Сделать текущей</SubmitButton>

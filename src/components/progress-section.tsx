@@ -22,14 +22,14 @@ export async function ProgressSection({ actor, clientId }: { actor: Actor; clien
         <div className="mb-3 grid grid-cols-3 gap-2">
           <div>
             <div className="text-[13px] font-semibold text-ink">Сейчас</div>
-            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-green">
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-mint">
               {last ? <Digits value={last.weightKg} decimals={1} /> : "—"}
               <span className="text-[15px]">{last ? "кг" : ""}</span>
             </div>
           </div>
           <div>
             <div className="text-[13px] font-semibold text-ink">Изменение</div>
-            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-blue">
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-lilac">
               {last && first ? (
                 <>
                   {last.weightKg - first.weightKg >= 0 ? "+" : "−"}
@@ -42,7 +42,7 @@ export async function ProgressSection({ actor, clientId }: { actor: Actor; clien
           </div>
           <div>
             <div className="text-[13px] font-semibold text-ink">ИМТ</div>
-            <div className="font-display text-[1.75rem] font-bold leading-tight text-ring-red">{bmi ? <Digits value={+bmi.toFixed(1)} decimals={1} /> : "—"}</div>
+            <div className="font-display text-[1.75rem] font-bold leading-tight text-coral">{bmi ? <Digits value={+bmi.toFixed(1)} decimals={1} /> : "—"}</div>
           </div>
         </div>
         <BodyWeightChart points={weights.map((w) => ({ date: `${w.date}T12:00:00Z`, weightKg: w.weightKg }))} />
@@ -59,7 +59,7 @@ export async function ProgressSection({ actor, clientId }: { actor: Actor; clien
         </ActionForm>
         {weights.length > 0 && (
           <details className="mt-3 text-sm">
-            <summary className="cursor-pointer text-[15px] font-medium text-brand-500">Все записи ({weights.length})</summary>
+            <summary className="cursor-pointer text-[15px] font-medium text-mint">Все записи ({weights.length})</summary>
             <ul className="mt-2 divide-y divide-line/60">
               {[...weights].reverse().map((w) => (
                 <li key={w.id} className="flex items-center justify-between py-1.5">

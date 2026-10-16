@@ -15,9 +15,9 @@ type CalSession = {
 };
 
 const dot: Record<SessionPhase, string> = {
-  upcoming: "bg-ring-blue",
+  upcoming: "bg-lilac",
   in_progress: "bg-brand-500",
-  awaiting_results: "bg-ring-red",
+  awaiting_results: "bg-coral",
   completed: "bg-brand-500",
   cancelled: "bg-faint",
 };
@@ -49,7 +49,7 @@ export function WeekCalendar({
       ...sessions.filter((s) => moscowDateString(s.startsAt) === key).map((s) => ({ kind: "session" as const, s, t: s.startsAt })),
       ...busy.filter((b) => moscowDateString(b.startsAt) === key).map((b) => ({ kind: "busy" as const, b, t: b.startsAt })),
     ].sort((a, b) => a.t.getTime() - b.t.getTime());
-  const navBtn = "press flex h-9 w-9 items-center justify-center rounded-full bg-surface text-ink hover:bg-subtle";
+  const navBtn = "press glass flex h-10 w-10 items-center justify-center rounded-2xl text-ink hover:bg-subtle";
 
   return (
     <div key={moscowDateString(weekStart)}>
@@ -62,7 +62,7 @@ export function WeekCalendar({
             {formatDateShort(days[0])} — {formatDateShort(days[6])}
           </div>
           {!isCurrentWeek && (
-            <Link href={navHref(today)} className="text-[13px] font-semibold text-brand-500">
+            <Link href={navHref(today)} className="text-[13px] font-semibold text-mint">
               Сегодня
             </Link>
           )}
@@ -73,18 +73,18 @@ export function WeekCalendar({
       </div>
 
       {/* полоса дней */}
-      <div className="mb-4 grid animate-pop grid-cols-7 rounded-3xl bg-surface p-2">
+      <div className="glass mb-4 grid animate-pop grid-cols-7 rounded-3xl p-2">
         {days.map((day) => {
           const key = moscowDateString(day);
           const z = toMoscow(day);
           const items = byDay(key).filter((x) => x.kind === "session");
           return (
             <a key={key} href={`#d-${key}`} className="press flex flex-col items-center gap-1 py-1">
-              <span className={clsx("text-[11px] font-semibold uppercase", key === today ? "text-ring-red" : "text-muted")}>{format(z, "EEEEEE", { locale: ru })}</span>
+              <span className={clsx("text-[11px] font-semibold uppercase", key === today ? "text-mint" : "text-muted")}>{format(z, "EEEEEE", { locale: ru })}</span>
               <span
                 className={clsx(
                   "flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] font-semibold",
-                  key === today ? "bg-ring-red text-white" : "text-ink",
+                  key === today ? "bg-gradient-to-br from-mint to-lilac text-[#0a0d14] shadow-glow" : "text-ink",
                 )}
               >
                 {format(z, "d")}
@@ -104,10 +104,10 @@ export function WeekCalendar({
           const items = byDay(key);
           const z = toMoscow(day);
           return (
-            <section key={key} id={`d-${key}`} className={clsx("scroll-mt-20 rounded-3xl bg-surface p-4", key < today && "opacity-60")}>
+            <section key={key} id={`d-${key}`} className={clsx("glass scroll-mt-20 rounded-3xl p-4", key < today && "opacity-60")}>
               <div className="mb-1 flex items-baseline justify-between">
                 <h3 className="text-[15px] font-semibold first-letter:uppercase">{format(z, "EEEE, d MMMM", { locale: ru })}</h3>
-                {key === today && <span className="text-[13px] font-semibold text-ring-red">Сегодня</span>}
+                {key === today && <span className="text-[13px] font-semibold text-mint">Сегодня</span>}
               </div>
               {items.length === 0 ? (
                 <p className="py-1 text-[15px] text-faint">Нет занятий</p>

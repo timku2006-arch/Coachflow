@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
-import { unreadCount } from "@/server/services/notifications";
 import { requireClient } from "@/server/auth";
+import { unreadCount } from "@/server/services/notifications";
+import type { NavItem } from "@/components/nav-links";
 
-const items = [
-  { href: "/client", label: "Главная", icon: "home" as const, exact: true },
-  { href: "/client/schedule", label: "Занятия", icon: "calendar" as const },
-  { href: "/client/program", label: "Программа", icon: "program" as const },
-  { href: "/client/progress", label: "Прогресс", icon: "progress" as const },
-  { href: "/client/profile", label: "Профиль", icon: "user" as const },
+const items: NavItem[] = [
+  { href: "/client", label: "Главная", icon: "home", exact: true },
+  { href: "/client/schedule", label: "Занятия", icon: "calendar" },
+  { href: "/client/schedule#new", label: "Записаться", icon: "plus", action: true },
+  { href: "/client/program", label: "Программа", icon: "program" },
+  { href: "/client/progress", label: "Прогресс", icon: "progress" },
 ];
 
 export default async function ClientLayout({ children }: { children: ReactNode }) {

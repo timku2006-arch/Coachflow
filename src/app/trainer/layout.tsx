@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
-import { unreadCount } from "@/server/services/notifications";
 import { requireTrainer } from "@/server/auth";
+import { unreadCount } from "@/server/services/notifications";
+import type { NavItem } from "@/components/nav-links";
 
-const items = [
-  { href: "/trainer", label: "Главная", icon: "home" as const, exact: true },
-  { href: "/trainer/schedule", label: "Расписание", icon: "calendar" as const },
-  { href: "/trainer/clients", label: "Клиенты", icon: "users" as const },
-  { href: "/trainer/exercises", label: "Упражнения", icon: "dumbbell" as const },
-  { href: "/trainer/profile", label: "Профиль", icon: "settings" as const },
+const items: NavItem[] = [
+  { href: "/trainer", label: "Главная", icon: "home", exact: true },
+  { href: "/trainer/schedule", label: "Расписание", icon: "calendar" },
+  { href: "/trainer/schedule#new", label: "Записать клиента", icon: "plus", action: true },
+  { href: "/trainer/clients", label: "Клиенты", icon: "users" },
+  { href: "/trainer/exercises", label: "Упражнения", icon: "dumbbell" },
 ];
 
 export default async function TrainerLayout({ children }: { children: ReactNode }) {

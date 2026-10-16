@@ -82,7 +82,7 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
 
 export function LockedNotice({ telegramUrl }: { telegramUrl: string | null }) {
   return (
-    <div className="animate-pop rounded-3xl bg-surface p-4">
+    <div className="animate-pop glass rounded-3xl p-4">
       <div className="flex gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
           <Clock3 size={20} />

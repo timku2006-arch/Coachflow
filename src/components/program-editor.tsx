@@ -63,7 +63,7 @@ export function ProgramEditor({
               </select>
               <button type="button" onClick={() => move(i, -1)} className="px-2 text-muted hover:text-ink" aria-label="Выше">↑</button>
               <button type="button" onClick={() => move(i, 1)} className="px-2 text-muted hover:text-ink" aria-label="Ниже">↓</button>
-              <button type="button" onClick={() => setP({ ...p, items: p.items.filter((_, j) => j !== i) })} className="px-2 text-muted hover:text-brand-500" aria-label="Удалить">✕</button>
+              <button type="button" onClick={() => setP({ ...p, items: p.items.filter((_, j) => j !== i) })} className="px-2 text-muted hover:text-mint" aria-label="Удалить">✕</button>
             </div>
             <div className="mt-2 grid grid-cols-4 gap-2">
               <label className="text-[12px] font-semibold text-muted">Подходы<input className={cell} inputMode="numeric" value={it.sets} onChange={(e) => setItem(i, { sets: e.target.value })} required /></label>

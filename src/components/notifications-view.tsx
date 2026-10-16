@@ -8,14 +8,14 @@ import { MarkRead } from "./mark-read";
 import { formatTime, relativeDayLabel } from "@/lib/time";
 
 const icons: Record<string, { icon: typeof Bell; tone: string }> = {
-  session_booked: { icon: CalendarPlus, tone: "bg-ring-green text-black" },
-  session_rescheduled: { icon: CalendarClock, tone: "bg-amber-700 text-black" },
-  session_cancelled: { icon: CalendarX2, tone: "bg-ring-red text-white" },
-  session_reminder: { icon: Bell, tone: "bg-ring-blue text-black" },
-  results_ready: { icon: Dumbbell, tone: "bg-ring-green text-black" },
-  program_updated: { icon: ClipboardList, tone: "bg-ring-blue text-black" },
-  nutrition_updated: { icon: Flame, tone: "bg-ring-red text-white" },
-  test: { icon: PartyPopper, tone: "bg-ring-green text-black" },
+  session_booked: { icon: CalendarPlus, tone: "bg-mint text-[#0a0d14]" },
+  session_rescheduled: { icon: CalendarClock, tone: "bg-amber-700 text-[#0a0d14]" },
+  session_cancelled: { icon: CalendarX2, tone: "bg-coral text-[#0a0d14]" },
+  session_reminder: { icon: Bell, tone: "bg-lilac text-[#0a0d14]" },
+  results_ready: { icon: Dumbbell, tone: "bg-mint text-[#0a0d14]" },
+  program_updated: { icon: ClipboardList, tone: "bg-lilac text-[#0a0d14]" },
+  nutrition_updated: { icon: Flame, tone: "bg-coral text-[#0a0d14]" },
+  test: { icon: PartyPopper, tone: "bg-mint text-[#0a0d14]" },
 };
 
 /** Лента уведомлений + настройка push. Общая для тренера и клиента. */
@@ -45,7 +45,7 @@ export function NotificationsView({ items, publicKey }: { items: Notification[];
                     </span>
                     <span className="mt-0.5 block text-[15px] text-muted">{n.body}</span>
                   </span>
-                  {!n.readAt && <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-ring-blue" aria-label="Новое" />}
+                  {!n.readAt && <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-lilac" aria-label="Новое" />}
                 </>
               );
               const cls = clsx(

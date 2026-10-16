@@ -10,6 +10,7 @@ import { formatDate, formatDateTime, formatTime, moscowDateString, moscowTimeStr
 import { canEnterResults } from "@/lib/session-phase";
 import { Avatar, Card, Notice, PhaseBadge } from "./ui";
 import { Countdown } from "./countdown";
+import { FlowWaves } from "./flow-waves";
 import { ResultsList } from "./results-list";
 import { SessionActions } from "./session-actions";
 import { ResultsEditor, type EditorSet } from "./results-editor";
@@ -55,31 +56,31 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
   return (
     <div className="stagger space-y-4">
       {/* Шапка занятия */}
-      <div className="relative animate-pop overflow-hidden rounded-3xl bg-gradient-to-br from-[#2a2a2e] to-[#141416] p-5">
-        <div aria-hidden className="absolute -right-20 -top-20 h-56 w-56 animate-breathe rounded-full bg-ring-blue/15 blur-3xl" />
+      <div className="glass relative animate-pop overflow-hidden rounded-[2rem] p-5">
+        <FlowWaves className="absolute inset-x-0 -bottom-6 h-20 opacity-[0.14]" />
         <div className="relative flex items-center gap-3">
           {isTrainer && <Avatar name={s.client.user.name} size="lg" />}
           <div className="min-w-0">
             <div className="text-[15px] font-semibold text-muted first-letter:uppercase">
               {relativeDayLabel(s.startsAt)}, {formatDate(s.startsAt)}
             </div>
-            <h1 className="truncate font-display text-[1.75rem] font-bold leading-tight">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
+            <h1 className="truncate font-display text-[1.6rem] font-semibold leading-tight">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
             <PhaseBadge phase={s.phase} />
           </div>
         </div>
-        <div className="relative mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-white/10 pt-3">
-          <div className="font-display text-5xl font-bold leading-none">
+        <div className="relative mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-white/[0.06] pt-3">
+          <div className="whitespace-nowrap font-display text-[2.3rem] font-semibold leading-none sm:text-5xl">
             {formatTime(s.startsAt)}
             <span className="text-faint">–{formatTime(s.endsAt)}</span>
           </div>
           {s.phase === "upcoming" ? (
             <div className="text-right">
               <div className="text-[13px] font-semibold text-muted">До начала</div>
-              <Countdown to={s.startsAt.toISOString()} className="font-display text-2xl font-bold leading-none text-brand-500" />
+              <Countdown to={s.startsAt.toISOString()} className="font-display text-2xl font-semibold leading-none text-flow" />
             </div>
           ) : (
             isTrainer && (
-              <Link href={`/trainer/clients/${s.clientId}`} className="press text-[15px] font-semibold text-brand-500">
+              <Link href={`/trainer/clients/${s.clientId}`} className="press text-[15px] font-semibold text-mint">
                 Карточка клиента →
               </Link>
             )
@@ -135,7 +136,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
         </Card>
       )}
 
-      <Link href={`${base}/schedule?week=${moscowDateString(s.startsAt)}`} className="press inline-block text-[15px] font-medium text-brand-500">
+      <Link href={`${base}/schedule?week=${moscowDateString(s.startsAt)}`} className="press inline-block text-[15px] font-medium text-mint">
         ← К расписанию
       </Link>
     </div>

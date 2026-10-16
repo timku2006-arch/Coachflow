@@ -136,7 +136,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
                       {plural(p._count.exercises, ["упражнение", "упражнения", "упражнений"])} · обновлена {formatDate(p.updatedAt)}
                     </span>
                   </span>
-                  {p.isActive && <span className="rounded-full bg-brand-500/15 px-2.5 py-1 text-[13px] font-semibold text-brand-500">Текущая</span>}
+                  {p.isActive && <span className="rounded-full bg-brand-500/15 px-2.5 py-1 text-[13px] font-semibold text-mint">Текущая</span>}
                 </Link>
               </li>
             ))}

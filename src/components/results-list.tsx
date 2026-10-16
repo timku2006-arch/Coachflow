@@ -25,7 +25,7 @@ export function ResultsList({ results, compact }: { results: Row[]; compact?: bo
         {groups.map((g) => (
           <li key={g.name} className="flex gap-2">
             <span className="shrink-0 text-ink-2">{g.name}</span>
-            <span className="truncate font-display font-semibold text-brand-500">{g.sets.map((s) => `${fmtKg(s.weightKg)}×${s.reps}`).join("  ")}</span>
+            <span className="truncate font-display font-semibold text-mint">{g.sets.map((s) => `${fmtKg(s.weightKg)}×${s.reps}`).join("  ")}</span>
           </li>
         ))}
       </ul>
@@ -36,7 +36,7 @@ export function ResultsList({ results, compact }: { results: Row[]; compact?: bo
         <li key={g.name} className="py-3 first:pt-0">
           <div className="mb-2 flex items-baseline justify-between gap-2">
             <span className="text-[17px] font-semibold">{g.name}</span>
-            <span className="text-[13px] font-semibold text-ring-green">макс. {fmtKg(Math.max(...g.sets.map((x) => x.weightKg)))} кг</span>
+            <span className="text-[13px] font-semibold text-mint">макс. {fmtKg(Math.max(...g.sets.map((x) => x.weightKg)))} кг</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {g.sets.map((s) => (

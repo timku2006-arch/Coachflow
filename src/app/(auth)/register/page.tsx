@@ -13,7 +13,7 @@ export default async function RegisterPage() {
     return (
       <div className="space-y-4 text-sm text-ink-2">
         <p>Тренер уже зарегистрирован. Клиентов создаёт тренер в своём кабинете.</p>
-        <Link href="/login" className="font-semibold text-brand-500 hover:opacity-80">
+        <Link href="/login" className="font-semibold text-mint hover:opacity-80">
           Перейти ко входу
         </Link>
       </div>

@@ -9,7 +9,7 @@ export function HistoryList({ history, hrefBase }: { history: Awaited<ReturnType
   return (
     <ul className="stagger space-y-3">
       {history.map((s) => (
-        <li key={s.id} className="rounded-3xl bg-surface px-4">
+        <li key={s.id} className="glass rounded-3xl px-4">
           <ListRow href={`${hrefBase}/${s.id}`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
@@ -20,7 +20,7 @@ export function HistoryList({ history, hrefBase }: { history: Awaited<ReturnType
                 {s.status === "COMPLETED" ? (
                   <ResultsList results={s.results} compact />
                 ) : (
-                  <span className="text-[13px] font-semibold text-ring-red">● Ждёт результатов</span>
+                  <span className="text-[13px] font-semibold text-coral">● Ждёт результатов</span>
                 )}
               </div>
               {s.notes && <p className="mt-1.5 text-[14px] italic text-muted">«{s.notes}»</p>}

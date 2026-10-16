@@ -23,9 +23,9 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-dvh pb-28 lg:pb-12">
-      <header className="sticky top-0 z-30 bg-canvas/70 pt-[env(safe-area-inset-top)] backdrop-blur-xl backdrop-saturate-150">
+      <header className="sticky top-0 z-30 bg-canvas/75 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-4 px-4">
-          <Link href={home} className="press shrink-0 text-lg" aria-label="CoachFlow — на главную">
+          <Link href={home} className="press shrink-0 text-[17px]" aria-label="CoachFlow — на главную">
             <Wordmark />
           </Link>
           <nav className="mx-auto hidden min-w-0 lg:block">
@@ -34,13 +34,13 @@ export function AppShell({
           <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
             <Link
               href={`${home}/notifications`}
-              className="press relative flex h-9 w-9 items-center justify-center rounded-full bg-surface text-ink hover:bg-subtle"
+              className="press glass relative flex h-10 w-10 items-center justify-center rounded-2xl text-ink hover:bg-subtle"
               aria-label={unread ? `Уведомления: ${unread} новых` : "Уведомления"}
               title="Уведомления"
             >
               <Bell size={18} className={clsx(unread > 0 && "origin-top animate-[ring_1.2s_ease-in-out_2]")} />
               {unread > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] animate-pop items-center justify-center rounded-full bg-ring-red px-1 text-[11px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] animate-pop items-center justify-center rounded-full bg-coral px-1 text-[11px] font-bold text-[#0a0d14] ring-2 ring-canvas">
                   {unread > 99 ? "99+" : unread}
                 </span>
               )}
@@ -50,7 +50,7 @@ export function AppShell({
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 pb-6 pt-3">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#121212]/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/[0.06] bg-[#0f131c]/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
         <div className="mx-auto max-w-lg">
           <NavLinks items={items} variant="bottom" />
         </div>

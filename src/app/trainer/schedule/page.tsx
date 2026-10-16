@@ -23,7 +23,7 @@ export default async function TrainerSchedule({ searchParams }: { searchParams: 
         sessionHref={(id) => `/trainer/sessions/${id}`}
         navHref={(w) => `/trainer/schedule?week=${w}`}
       />
-      <Card title="Новая запись" className="mt-4 max-w-lg">
+      <Card title="Новая запись" id="new" className="mt-6 max-w-lg">
         {clients.length === 0 ? (
           <p className="text-sm text-muted">Сначала добавьте клиента.</p>
         ) : (

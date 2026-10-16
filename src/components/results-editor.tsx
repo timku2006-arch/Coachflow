@@ -87,7 +87,7 @@ export function ResultsEditor({
                   className={`w-16 ${num}`}
                   required
                 />
-                <button type="button" onClick={() => addSetAfter(i)} className="press flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-brand-500 hover:bg-subtle" title="Повторить подход">
+                <button type="button" onClick={() => addSetAfter(i)} className="press flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-mint hover:bg-subtle" title="Повторить подход">
                   <Copy size={13} /> подход
                 </button>
                 <button type="button" onClick={() => remove(i)} className="press ml-auto flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-red-600/15 hover:text-red-600" aria-label="Удалить подход">

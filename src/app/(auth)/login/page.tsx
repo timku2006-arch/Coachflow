@@ -29,7 +29,7 @@ export default async function LoginPage() {
         {hasTrainer ? (
           "Нет аккаунта? Попросите тренера создать его для вас."
         ) : (
-          <Link href="/register" className="font-semibold text-brand-500 hover:opacity-80">
+          <Link href="/register" className="font-semibold text-mint hover:opacity-80">
             Зарегистрироваться как тренер
           </Link>
         )}
