@@ -4,6 +4,7 @@ import { assertClientAccess, assertTrainer } from "../access";
 import { notFound } from "../errors";
 import { programSchema } from "@/lib/validation";
 import { assertOwnExercises } from "./exercises";
+import { onProgramChanged } from "./events";
 
 const withItems = {
   exercises: { orderBy: { position: "asc" as const }, include: { exercise: true } },
@@ -39,7 +40,7 @@ export async function createProgram(actor: Actor, clientId: string, input: unkno
   await assertOwnExercises(actor.trainerId, data.items.map((i) => i.exerciseId));
   const hasActive = (await prisma.program.count({ where: { clientId, isActive: true } })) > 0;
   const makeActive = opts.makeActive ?? !hasActive;
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     if (makeActive) await tx.program.updateMany({ where: { clientId }, data: { isActive: false } });
     return tx.program.create({
       data: {
@@ -51,6 +52,8 @@ export async function createProgram(actor: Actor, clientId: string, input: unkno
       },
     });
   });
+  if (created.isActive) await onProgramChanged(clientId, created.name, "new");
+  return created;
 }
 
 export async function updateProgram(actor: Actor, programId: string, input: unknown) {
@@ -58,7 +61,7 @@ export async function updateProgram(actor: Actor, programId: string, input: unkn
   const program = await getProgram(actor, programId);
   const data = programSchema.parse(input);
   await assertOwnExercises(actor.trainerId, data.items.map((i) => i.exerciseId));
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     await tx.programExercise.deleteMany({ where: { programId: program.id } });
     return tx.program.update({
       where: { id: program.id },
@@ -69,6 +72,9 @@ export async function updateProgram(actor: Actor, programId: string, input: unkn
       },
     });
   });
+  // Клиент видит только текущую программу — о правках черновиков не сообщаем.
+  if (updated.isActive) await onProgramChanged(updated.clientId, updated.name, "updated");
+  return updated;
 }
 
 /** Делает программу текущей (у клиента может быть только одна текущая). */
@@ -79,6 +85,7 @@ export async function activateProgram(actor: Actor, programId: string) {
     prisma.program.updateMany({ where: { clientId: program.clientId }, data: { isActive: false } }),
     prisma.program.update({ where: { id: program.id }, data: { isActive: true } }),
   ]);
+  if (!program.isActive) await onProgramChanged(program.clientId, program.name, "new");
 }
 
 export async function deleteProgram(actor: Actor, programId: string) {

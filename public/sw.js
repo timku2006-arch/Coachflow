@@ -1,6 +1,6 @@
 // CoachFlow service worker: кэш статики и офлайн-страница.
 // Данные (страницы, действия) всегда запрашиваются из сети — офлайн показываем заглушку.
-const CACHE = "coachflow-v2";
+const CACHE = "coachflow-v3";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icons/icon.svg", "/icons/icon-192.png"];
 
@@ -43,4 +43,44 @@ self.addEventListener("fetch", (event) => {
       ),
     );
   }
+});
+
+// ---------------------------------------------------------------- push-уведомления
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "CoachFlow", body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "CoachFlow";
+  const options = {
+    body: data.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: data.tag ? `${data.tag}:${data.url || ""}` : undefined,
+    renotify: true,
+    data: { url: data.url || "/" },
+  };
+  const tasks = [self.registration.showNotification(title, options)];
+  // Счётчик на иконке приложения (iOS 16.4+, Android, десктоп)
+  if (typeof data.badge === "number" && self.navigator && "setAppBadge" in self.navigator) {
+    tasks.push(self.navigator.setAppBadge(data.badge).catch(() => {}));
+  }
+  event.waitUntil(Promise.all(tasks));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ("focus" in w) {
+          return w.navigate ? w.navigate(url).then((nw) => (nw || w).focus()) : w.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
 });

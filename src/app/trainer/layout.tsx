@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
+import { unreadCount } from "@/server/services/notifications";
 import { requireTrainer } from "@/server/auth";
 
 const items = [
@@ -12,8 +13,9 @@ const items = [
 
 export default async function TrainerLayout({ children }: { children: ReactNode }) {
   const { user } = await requireTrainer();
+  const unread = await unreadCount(user.id);
   return (
-    <AppShell items={items} userName={user.name} home="/trainer">
+    <AppShell items={items} userName={user.name} home="/trainer" unread={unread}>
       {children}
     </AppShell>
   );

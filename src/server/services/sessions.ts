@@ -8,6 +8,8 @@ import { SESSION_DURATION_MIN, addMinutes, addMoscowDays, moscowLocalToDate } fr
 import { CLIENT_CHANGE_WINDOW_HOURS, clientCanChangeSession } from "@/lib/booking-rules";
 import { canEnterResults, sessionPhase } from "@/lib/session-phase";
 import { assertOwnExercises } from "./exercises";
+import { onResultsSaved, onSessionBooked, onSessionCancelled, onSessionRescheduled } from "./events";
+import { REMINDER_DAY_MS, REMINDER_SOON_MS } from "./reminders";
 import { z } from "zod";
 
 const MAX_RANGE_DAYS = 366;
@@ -77,6 +79,15 @@ async function withOverlapGuard<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** Если до занятия уже меньше окна напоминания — это напоминание не нужно (запись и так свежая). */
+function reminderFlags(startsAt: Date, now: Date) {
+  const left = startsAt.getTime() - now.getTime();
+  return {
+    reminderDaySentAt: left <= REMINDER_DAY_MS ? now : null,
+    reminderSoonSentAt: left <= REMINDER_SOON_MS ? now : null,
+  };
+}
+
 // ---------------------------------------------------------------- создание
 export async function createSession(actor: Actor, input: unknown, now: Date = new Date()) {
   const data = createSessionSchema.parse(input);
@@ -93,14 +104,16 @@ export async function createSession(actor: Actor, input: unknown, now: Date = ne
   const endsAt = addMinutes(startsAt, SESSION_DURATION_MIN);
   validateNewTime(actor, startsAt, now);
 
-  return withOverlapGuard(() =>
+  const created = await withOverlapGuard(() =>
     prisma.$transaction(async (tx) => {
       await assertSlotFree(tx, actor.trainerId, startsAt, endsAt);
       return tx.session.create({
-        data: { trainerId: actor.trainerId, clientId, startsAt, endsAt, createdById: actor.userId },
+        data: { trainerId: actor.trainerId, clientId, startsAt, endsAt, createdById: actor.userId, ...reminderFlags(startsAt, now) },
       });
     }),
   );
+  await onSessionBooked(actor, created);
+  return created;
 }
 
 // ---------------------------------------------------------------- перенос
@@ -115,12 +128,14 @@ export async function rescheduleSession(actor: Actor, sessionId: string, input: 
   const endsAt = addMinutes(startsAt, SESSION_DURATION_MIN);
   validateNewTime(actor, startsAt, now);
 
-  return withOverlapGuard(() =>
+  const updated = await withOverlapGuard(() =>
     prisma.$transaction(async (tx) => {
       await assertSlotFree(tx, s.trainerId, startsAt, endsAt, s.id);
-      return tx.session.update({ where: { id: s.id }, data: { startsAt, endsAt } });
+      return tx.session.update({ where: { id: s.id }, data: { startsAt, endsAt, ...reminderFlags(startsAt, now) } });
     }),
   );
+  await onSessionRescheduled(actor, s, updated);
+  return updated;
 }
 
 // ---------------------------------------------------------------- отмена
@@ -130,10 +145,12 @@ export async function cancelSession(actor: Actor, sessionId: string, now: Date =
   if (actor.role === "CLIENT" && !clientCanChangeSession(s.startsAt, now)) {
     throw new AppError("TOO_LATE", TOO_LATE_MESSAGE);
   }
-  return prisma.session.update({
+  const cancelled = await prisma.session.update({
     where: { id: s.id },
     data: { status: "CANCELLED", cancelledAt: now, cancelledById: actor.userId },
   });
+  await onSessionCancelled(actor, cancelled);
+  return cancelled;
 }
 
 // ---------------------------------------------------------------- чтение
@@ -232,6 +249,7 @@ export async function saveSessionResults(actor: Actor, sessionId: string, input:
     prisma.sessionResult.createMany({ data: rows }),
     prisma.session.update({ where: { id: s.id }, data: { status: "COMPLETED", notes: data.notes } }),
   ]);
+  if (rows.length > 0) await onResultsSaved(s, s.status !== "COMPLETED", rows);
 }
 
 /** Заметка тренера к тренировке (можно и до занятия — как план). */

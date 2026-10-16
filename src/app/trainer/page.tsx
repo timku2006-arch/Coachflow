@@ -9,6 +9,9 @@ import { Card, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
 import { SessionList } from "@/components/session-list";
 import { CountUp } from "@/components/count-up";
 
+import { PushPrompt } from "@/components/push-setup";
+import { vapidPublicKey } from "@/server/services/notifications";
+
 export const metadata = { title: "Главная" };
 
 function greeting(now: Date) {
@@ -21,7 +24,7 @@ export default async function TrainerHome() {
   const now = new Date();
   const dayStart = new Date(startOfDay(toMoscow(now)).getTime());
   const weekStart = moscowWeekStart(now);
-  const [today, awaiting, clientsCount, weekCount] = await Promise.all([
+  const [today, awaiting, clientsCount, weekCount, publicKey] = await Promise.all([
     prisma.session.findMany({
       where: { trainerId: actor.trainerId, startsAt: { gte: dayStart, lt: addMoscowDays(dayStart, 1) } },
       include: { client: { include: { user: { select: { name: true } } } } },
@@ -32,6 +35,7 @@ export default async function TrainerHome() {
     prisma.session.count({
       where: { trainerId: actor.trainerId, status: { not: "CANCELLED" }, startsAt: { gte: weekStart, lt: addMoscowDays(weekStart, 7) } },
     }),
+    vapidPublicKey(),
   ]);
   const activeToday = today.filter((s) => s.status !== "CANCELLED");
   return (
@@ -56,6 +60,7 @@ export default async function TrainerHome() {
           — клиенты смогут написать вам, если до занятия меньше 3 часов.
         </Notice>
       )}
+      <PushPrompt publicKey={publicKey} />
       <div className="stagger mb-5 grid grid-cols-3 gap-2.5">
         <Stat tone="brand" label="Клиенты" value={<CountUp value={clientsCount} />} />
         <Stat label="За неделю" value={<CountUp value={weekCount} />} />

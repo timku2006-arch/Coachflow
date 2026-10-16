@@ -3,7 +3,7 @@ import type { ClientActor, TrainerActor } from "@/server/actor";
 
 export async function resetDb() {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "SessionResult","Session","ProgramExercise","Program","Exercise","NutritionTargets","ClientNote","BodyWeightEntry","ClientProfile","TrainerProfile","User" CASCADE',
+    'TRUNCATE "Notification","PushSubscription","AppSetting","SessionResult","Session","ProgramExercise","Program","Exercise","NutritionTargets","ClientNote","BodyWeightEntry","ClientProfile","TrainerProfile","User" CASCADE',
   );
 }
 

@@ -12,14 +12,18 @@ import { NutritionCard } from "@/components/nutrition-card";
 import { LockedNotice } from "@/components/session-actions";
 import { CountUp } from "@/components/count-up";
 
+import { PushPrompt } from "@/components/push-setup";
+import { vapidPublicKey } from "@/server/services/notifications";
+
 export const metadata = { title: "Главная" };
 
 export default async function ClientHome() {
   const { user, actor } = await requireClient();
-  const [client, upcoming, program] = await Promise.all([
+  const [client, upcoming, program, publicKey] = await Promise.all([
     getClient(actor, actor.clientId),
     listUpcoming(actor, actor.clientId),
     getActiveProgram(actor, actor.clientId),
+    vapidPublicKey(),
   ]);
   const next = upcoming[0];
   const lastWeight = client.bodyWeights.at(-1);
@@ -28,6 +32,7 @@ export default async function ClientHome() {
   return (
     <>
       <PageHeader eyebrow="Твой прогресс" title={`Привет, ${user.name.split(" ")[0]}!`} />
+      <PushPrompt publicKey={publicKey} />
       <div className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-muted">Следующая тренировка</div>
 
       {/* Герой: следующее занятие */}

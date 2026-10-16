@@ -33,6 +33,8 @@ model User {
 
   trainerProfile TrainerProfile?
   clientProfile  ClientProfile?
+  notifications  Notification[]
+  pushSubscriptions PushSubscription[]
 }
 
 model TrainerProfile {
@@ -144,6 +146,9 @@ model Session {
   createdById String
   cancelledAt DateTime?      @db.Timestamptz(3)
   cancelledById String?
+  // Напоминания (сбрасываются при переносе)
+  reminderDaySentAt   DateTime? @db.Timestamptz(3)
+  reminderSoonSentAt  DateTime? @db.Timestamptz(3)
   createdAt   DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
 
@@ -177,4 +182,39 @@ model NutritionTargets {
   fatG      Int
   carbsG    Int
   updatedAt DateTime      @updatedAt @db.Timestamptz(3)
+}
+
+// Уведомление пользователю (колокольчик в приложении + push на телефон)
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  url       String?
+  readAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, createdAt])
+}
+
+// Подписка браузера/телефона на push-уведомления (Web Push)
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+}
+
+// Служебные настройки приложения (например, ключи VAPID для push)
+model AppSetting {
+  key   String @id
+  value String
 }

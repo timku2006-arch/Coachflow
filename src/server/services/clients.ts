@@ -12,6 +12,7 @@ import {
   nutritionSchema,
 } from "@/lib/validation";
 import { dateOnly } from "@/lib/time";
+import { onNutritionChanged } from "./events";
 
 export async function listClients(actor: TrainerActor) {
   assertTrainer(actor);
@@ -102,11 +103,13 @@ export async function setNutritionTargets(actor: Actor, clientId: string, input:
   assertTrainer(actor);
   await assertClientAccess(prisma, actor, clientId);
   const data = nutritionSchema.parse(input);
-  return prisma.nutritionTargets.upsert({
+  const saved = await prisma.nutritionTargets.upsert({
     where: { clientId },
     create: { clientId, ...data },
     update: data,
   });
+  await onNutritionChanged(clientId, data);
+  return saved;
 }
 
 /** Запись веса тела (одна на дату — повторная запись перезаписывает). */

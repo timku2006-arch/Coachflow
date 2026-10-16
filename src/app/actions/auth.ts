@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/server/db";
-import { endSession, hashPassword, requireUser, startSession, verifyPassword } from "@/server/auth";
+import { endSession, getCurrentUser, hashPassword, requireUser, startSession, verifyPassword } from "@/server/auth";
 import { AppError } from "@/server/errors";
 import { formObject, handle, type FormState } from "@/server/action";
 import { changePasswordSchema, loginSchema, registerTrainerSchema } from "@/lib/validation";
@@ -63,7 +63,13 @@ export async function changePasswordAction(_: FormState, fd: FormData): Promise<
   });
 }
 
-export async function logoutAction() {
+export async function logoutAction(fd?: FormData) {
+  // Отвязываем push-подписку этого устройства, чтобы уведомления не приходили после выхода.
+  const endpoint = fd?.get("endpoint");
+  const user = await getCurrentUser();
+  if (user && typeof endpoint === "string" && endpoint) {
+    await prisma.pushSubscription.deleteMany({ where: { userId: user.id, endpoint } });
+  }
   await endSession();
   redirect("/login");
 }

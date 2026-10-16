@@ -1,12 +1,25 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { LogOut } from "lucide-react";
+import { Bell } from "lucide-react";
+import clsx from "clsx";
+import { LogoutButton } from "./logout-button";
 import { Logo } from "./logo";
 import { NavLinks, type NavItem } from "./nav-links";
 import { Avatar } from "./ui";
-import { logoutAction } from "@/app/actions/auth";
 
-export function AppShell({ items, userName, home, children }: { items: NavItem[]; userName: string; home: string; children: ReactNode }) {
+export function AppShell({
+  items,
+  userName,
+  home,
+  unread = 0,
+  children,
+}: {
+  items: NavItem[];
+  userName: string;
+  home: string;
+  unread?: number;
+  children: ReactNode;
+}) {
   return (
     <div className="min-h-dvh pb-28 md:pb-10">
       <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/75 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
@@ -25,15 +38,20 @@ export function AppShell({ items, userName, home, children }: { items: NavItem[]
               <Avatar name={userName} size="sm" />
               <span className="max-w-36 truncate text-sm font-semibold text-ink-2">{userName}</span>
             </span>
-            <form action={logoutAction}>
-              <button
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted transition hover:bg-subtle hover:text-ink active:scale-90"
-                aria-label="Выйти"
-                title="Выйти"
-              >
-                <LogOut size={18} />
-              </button>
-            </form>
+            <Link
+              href={`${home}/notifications`}
+              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted transition hover:bg-subtle hover:text-ink active:scale-90"
+              aria-label={unread ? `Уведомления: ${unread} новых` : "Уведомления"}
+              title="Уведомления"
+            >
+              <Bell size={19} className={clsx(unread > 0 && "origin-top animate-[ring_1.2s_ease-in-out_2] text-ink")} />
+              {unread > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] animate-pop items-center justify-center rounded-full bg-brand-gradient px-1 text-[10px] font-extrabold text-white ring-2 ring-canvas">
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              )}
+            </Link>
+            <LogoutButton />
           </div>
         </div>
       </header>

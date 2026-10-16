@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
+import { unreadCount } from "@/server/services/notifications";
 import { requireClient } from "@/server/auth";
 
 const items = [
@@ -12,8 +13,9 @@ const items = [
 
 export default async function ClientLayout({ children }: { children: ReactNode }) {
   const { user } = await requireClient();
+  const unread = await unreadCount(user.id);
   return (
-    <AppShell items={items} userName={user.name} home="/client">
+    <AppShell items={items} userName={user.name} home="/client" unread={unread}>
       {children}
     </AppShell>
   );

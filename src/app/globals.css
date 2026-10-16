@@ -134,6 +134,14 @@ body {
   33% { transform: translate(30px, -40px) scale(1.08); }
   66% { transform: translate(-25px, 20px) scale(0.95); }
 }
+@keyframes ring {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-12deg); }
+  45% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  75% { transform: rotate(2deg); }
+}
 @keyframes grow-x {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
