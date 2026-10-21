@@ -1,6 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { Bell, CalendarClock, CalendarPlus, CalendarX2, ClipboardList, Dumbbell, Flame, PartyPopper } from "lucide-react";
+import { Award, Bell, CalendarCheck2, CalendarClock, CalendarPlus, CalendarX2, ClipboardList, Dumbbell, Flame, PartyPopper, Ticket, Trophy } from "lucide-react";
 import type { Notification } from "@prisma/client";
 import { Card, Empty } from "./ui";
 import { PushSetup } from "./push-setup";
@@ -15,6 +15,10 @@ const icons: Record<string, { icon: typeof Bell; tone: string }> = {
   results_ready: { icon: Dumbbell, tone: "bg-mint text-[#0a0d14]" },
   program_updated: { icon: ClipboardList, tone: "bg-lilac text-[#0a0d14]" },
   nutrition_updated: { icon: Flame, tone: "bg-coral text-[#0a0d14]" },
+  record: { icon: Trophy, tone: "bg-gradient-to-br from-mint to-lilac text-[#0a0d14]" },
+  achievement: { icon: Award, tone: "bg-lilac text-[#0a0d14]" },
+  membership: { icon: Ticket, tone: "bg-coral text-[#0a0d14]" },
+  attendance: { icon: CalendarCheck2, tone: "bg-lilac text-[#0a0d14]" },
   test: { icon: PartyPopper, tone: "bg-mint text-[#0a0d14]" },
 };
 

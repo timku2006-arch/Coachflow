@@ -19,6 +19,8 @@ export function HistoryList({ history, hrefBase }: { history: Awaited<ReturnType
               <div className="mt-1.5">
                 {s.status === "COMPLETED" ? (
                   <ResultsList results={s.results} compact />
+                ) : s.status === "MISSED" ? (
+                  <span className="text-[13px] font-semibold text-coral">● Пропуск</span>
                 ) : (
                   <span className="text-[13px] font-semibold text-coral">● Ждёт результатов</span>
                 )}

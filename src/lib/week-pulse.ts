@@ -1,8 +1,9 @@
+import type { SessionStatusValue } from "@/lib/session-phase";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { moscowDateString, toMoscow, weekDays } from "./time";
 
-type S = { startsAt: Date; status: "SCHEDULED" | "COMPLETED" | "CANCELLED" };
+type S = { startsAt: Date; status: SessionStatusValue };
 
 /** Данные для «Пульса недели»: по каждому дню — сколько запланировано и сколько проведено. */
 export function buildWeekPulse(weekStart: Date, sessions: S[], now: Date = new Date()) {

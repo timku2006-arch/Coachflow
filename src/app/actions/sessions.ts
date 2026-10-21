@@ -6,6 +6,7 @@ import { requireActor, requireClient } from "@/server/auth";
 import { formObject, handle, jsonField, type FormState } from "@/server/action";
 import * as sessions from "@/server/services/sessions";
 import * as clients from "@/server/services/clients";
+import { remainingText } from "@/lib/membership";
 
 // Все проверки (роль, владение записью, окно в 3 часа, пересечения) — внутри сервисов.
 const refresh = () => revalidatePath("/", "layout");
@@ -41,9 +42,12 @@ export async function cancelSessionAction(sessionId: string, _: FormState): Prom
 export async function saveResultsAction(sessionId: string, _: FormState, fd: FormData): Promise<FormState> {
   return handle(async () => {
     const { actor } = await requireActor();
-    await sessions.saveSessionResults(actor, sessionId, jsonField(fd, "results"));
+    const outcome = await sessions.saveSessionResults(actor, sessionId, jsonField(fd, "results"));
     refresh();
-    return "Результаты сохранены";
+    const extra = outcome.records.map((r) => `🏆 ${r.title}`);
+    if (outcome.remaining !== null) extra.push(`Списано занятие с абонемента. ${remainingText(outcome.remaining)}.`);
+    for (const b of outcome.badges) extra.push(`🎖 Клиент получил значок «${b.title}»`);
+    return ["Результаты сохранены", ...extra].join("\n");
   });
 }
 

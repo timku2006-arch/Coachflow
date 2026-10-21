@@ -1,6 +1,6 @@
 // CoachFlow service worker: кэш статики и офлайн-страница.
 // Данные (страницы, действия) всегда запрашиваются из сети — офлайн показываем заглушку.
-const CACHE = "coachflow-v6";
+const CACHE = "coachflow-v7";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icons/icon.svg", "/icons/icon-192.png"];
 
@@ -60,7 +60,10 @@ self.addEventListener("push", (event) => {
     badge: "/icons/icon-192.png",
     tag: data.tag ? `${data.tag}:${data.url || ""}` : undefined,
     renotify: true,
-    data: { url: data.url || "/" },
+    data: { url: data.url || "/", sessionId: data.sessionId || null },
+    // кнопки «Приду» / «Не смогу» (Android и компьютер; iPhone кнопки не показывает)
+    actions: Array.isArray(data.actions) ? data.actions.slice(0, 2) : undefined,
+    requireInteraction: Array.isArray(data.actions) && data.actions.length > 0,
   };
   const tasks = [self.registration.showNotification(title, options)];
   // Счётчик на иконке приложения (iOS 16.4+, Android, десктоп)
@@ -72,7 +75,29 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = new URL((event.notification.data && event.notification.data.url) || "/", self.location.origin).href;
+  const data = event.notification.data || {};
+  // «Приду» — подтверждаем, не открывая приложение
+  if (event.action === "confirm" && data.sessionId) {
+    event.waitUntil(
+      fetch("/api/attendance", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: data.sessionId }),
+      })
+        .then((r) =>
+          self.registration.showNotification(r.ok ? "Отлично, ждём вас!" : "Не получилось подтвердить", {
+            body: r.ok ? "Тренер увидит, что вы придёте." : "Откройте приложение и нажмите «Приду».",
+            icon: "/icons/icon-192.png",
+            data: { url: data.url || "/" },
+          }),
+        )
+        .catch(() => self.clients.openWindow(data.url || "/")),
+    );
+    return;
+  }
+  const target = event.action === "decline" && data.sessionId ? `/client/sessions/${data.sessionId}/confirm?answer=decline` : data.url || "/";
+  const url = new URL(target, self.location.origin).href;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
       for (const w of wins) {

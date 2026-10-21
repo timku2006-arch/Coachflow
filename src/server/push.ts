@@ -5,7 +5,8 @@
 import webpush from "web-push";
 import { prisma } from "./db";
 
-export type PushPayload = { title: string; body: string; url?: string; tag?: string; badge?: number };
+export type PushAction = { action: string; title: string };
+export type PushPayload = { title: string; body: string; url?: string; tag?: string; badge?: number; actions?: PushAction[]; sessionId?: string };
 export type PushTarget = { endpoint: string; p256dh: string; auth: string };
 /** Результат отправки: gone — подписка больше не действует (удалить). */
 export type PushResult = "ok" | "gone" | "error";

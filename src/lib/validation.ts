@@ -131,3 +131,35 @@ export const sessionResultsSchema = z.object({
   notes: optionalText(2000),
   sets: z.array(resultSetSchema).max(200, "Не больше 200 подходов"),
 });
+
+// ---- Замеры тела
+const cm = (label: string) =>
+  z.preprocess(emptyToUndefined, num(label).min(20, `${label}: от 20 см`).max(300, `${label}: до 300 см`).optional()).transform((v) => v ?? null);
+
+export const measurementSchema = z
+  .object({
+    date: dateString,
+    weightKg: z.preprocess(emptyToUndefined, num("Вес").min(20, "Вес: от 20 кг").max(400, "Вес: до 400 кг").optional()).transform((v) => v ?? null),
+    waistCm: cm("Талия"),
+    hipsCm: cm("Бёдра"),
+    chestCm: cm("Грудь"),
+    armCm: cm("Руки"),
+  })
+  .refine((v) => [v.weightKg, v.waistCm, v.hipsCm, v.chestCm, v.armCm].some((x) => x !== null), { message: "Заполните хотя бы один замер" });
+
+// ---- Абонементы
+export const membershipSchema = z
+  .object({
+    totalSessions: field(num("Количество занятий").int("Количество занятий: целое число").min(1, "Минимум 1 занятие").max(500)),
+    validFrom: dateString,
+    validUntil: dateString,
+    paid: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
+    priceRub: z.preprocess(emptyToUndefined, num("Цена").int().min(0).max(10_000_000).optional()).transform((v) => v ?? null),
+    note: optionalText(300),
+  })
+  .refine((v) => v.validUntil >= v.validFrom, { message: "Дата окончания раньше даты начала", path: ["validUntil"] });
+
+export const membershipAdjustSchema = z.object({
+  remainingSessions: field(num("Остаток").int("Остаток: целое число").min(0, "Остаток не может быть меньше 0").max(500)),
+  note: optionalText(300),
+});

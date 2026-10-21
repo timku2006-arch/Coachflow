@@ -9,14 +9,14 @@ const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "Europe/Moscow" });
 const kg = (v: number) => `${v.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} кг`;
 
-function Chart({ data, dataKey, label, color = "#3ef2c5" }: { data: Record<string, number | string>[]; dataKey: string; label: string; color?: string }) {
+function Chart({ data, dataKey, label, color = "#3ef2c5", unit = "кг", height = 224 }: { data: Record<string, number | string>[]; dataKey: string; label: string; color?: string; unit?: string; height?: number }) {
   const gid = useId().replace(/:/g, "");
   const values = data.map((d) => Number(d[dataKey]));
   const min = Math.min(...values);
   const max = Math.max(...values);
   const pad = Math.max(1, (max - min) * 0.2);
   return (
-    <div className="h-56 w-full">
+    <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 6, left: -14, bottom: 0 }}>
           <defs>
@@ -31,7 +31,7 @@ function Chart({ data, dataKey, label, color = "#3ef2c5" }: { data: Record<strin
           <Tooltip
             cursor={{ stroke: "#ffffff", strokeOpacity: 0.25, strokeWidth: 1 }}
             labelFormatter={(v) => shortDate(String(v))}
-            formatter={(v) => [kg(Number(v)), label]}
+            formatter={(v) => [`${Number(v).toLocaleString("ru-RU", { maximumFractionDigits: 1 })} ${unit}`, label]}
             contentStyle={{ borderRadius: 14, border: "none", background: "#1b2130", color: "#ffffff", fontSize: 13, boxShadow: "0 20px 40px -10px rgb(0 0 0 / .7)" }}
             labelStyle={{ color: "#8a93a8", fontWeight: 600 }}
           />
@@ -108,4 +108,10 @@ export function ExerciseCharts({ series }: { series: ExerciseSeries[] }) {
       </div>
     </div>
   );
+}
+
+/** График любого замера (вес, талия, бёдра…) по датам. */
+export function MetricChart({ points, label, unit, color }: { points: { date: string; value: number }[]; label: string; unit: string; color: string }) {
+  if (points.length < 2) return <p className="py-4 text-center text-[15px] text-muted">Нужно минимум два замера, чтобы увидеть график.</p>;
+  return <Chart data={points.map((p) => ({ date: `${p.date}T12:00:00Z`, value: p.value }))} dataKey="value" label={label} unit={unit} color={color} height={170} />;
 }

@@ -1,16 +1,19 @@
+import type { SessionStatusValue } from "@/lib/session-phase";
 import Link from "next/link";
 import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { formatDateShort, formatTime, moscowDateString, weekDays, addMoscowDays, toMoscow } from "@/lib/time";
-import { sessionPhase, type SessionPhase } from "@/lib/session-phase";
+import { attendanceOf, sessionPhase, type SessionPhase } from "@/lib/session-phase";
+import { AttendanceBadge } from "./attendance";
 
 type CalSession = {
   id: string;
   startsAt: Date;
   endsAt: Date;
-  status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
+  status: SessionStatusValue;
+  confirmedAt?: Date | null;
   client?: { user: { name: string } };
 };
 
@@ -20,6 +23,7 @@ const dot: Record<SessionPhase, string> = {
   awaiting_results: "bg-coral",
   completed: "bg-brand-500",
   cancelled: "bg-faint",
+  missed: "bg-coral",
 };
 
 /** Неделя: полоса дней сверху (точки = занятия), ниже — занятия по дням. */
@@ -129,6 +133,7 @@ export function WeekCalendar({
                             <span className="text-muted">–{formatTime(it.s.endsAt)}</span>
                           </span>
                           {showClient && it.s.client && <span className="min-w-0 flex-1 truncate text-[15px] text-ink-2">{it.s.client.user.name}</span>}
+                          {showClient && <AttendanceBadge value={attendanceOf(it.s, now)} compact />}
                           <ChevronRight size={16} className="ml-auto shrink-0 text-faint" />
                         </Link>
                       </li>

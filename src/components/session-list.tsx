@@ -1,9 +1,11 @@
+import type { SessionStatusValue } from "@/lib/session-phase";
 import { CalendarCheck } from "lucide-react";
 import { formatTime, relativeDayLabel } from "@/lib/time";
-import { sessionPhase } from "@/lib/session-phase";
+import { attendanceOf, sessionPhase } from "@/lib/session-phase";
+import { AttendanceBadge } from "./attendance";
 import { Avatar, Empty, ListRow, PhaseBadge } from "./ui";
 
-type S = { id: string; startsAt: Date; endsAt: Date; status: "SCHEDULED" | "COMPLETED" | "CANCELLED"; client?: { user: { name: string } } };
+type S = { id: string; startsAt: Date; endsAt: Date; status: SessionStatusValue; confirmedAt?: Date | null; client?: { user: { name: string } } };
 
 /** Список занятий: время крупно слева, статус под именем, шеврон справа. */
 export function SessionList({ sessions, href, empty, showClient }: { sessions: S[]; href: (id: string) => string; empty: string; showClient?: boolean }) {
@@ -18,7 +20,10 @@ export function SessionList({ sessions, href, empty, showClient }: { sessions: S
               {showClient && s.client && <Avatar name={s.client.user.name} />}
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[17px] font-semibold">{showClient && s.client ? s.client.user.name : relativeDayLabel(s.startsAt)}</div>
-                <PhaseBadge phase={phase} />
+                <span className="flex flex-wrap items-center gap-2">
+                  <PhaseBadge phase={phase} />
+                  {showClient && <AttendanceBadge value={attendanceOf(s)} />}
+                </span>
               </div>
               <div className="text-right">
                 <div className={phase === "cancelled" ? "font-display text-xl font-bold text-muted line-through" : "font-display text-xl font-bold"}>{formatTime(s.startsAt)}</div>

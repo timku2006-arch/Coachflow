@@ -10,12 +10,20 @@ import { ActionForm, SubmitButton } from "@/components/form";
 import { Card, Empty, Field, Input, LinkButton, Notice, PageHeader, Textarea } from "@/components/ui";
 import { SessionList } from "@/components/session-list";
 import { HistoryList } from "@/components/history-list";
-import { ProgressSection } from "@/components/progress-section";
+import { ProgressTabs, type ProgressTab } from "@/components/progress-section";
+import { MembershipManager } from "@/components/membership-manager";
+import { SummaryCard } from "@/components/summary-card";
+import { Badge } from "@/components/badges";
+import { RecordsList } from "@/components/records-list";
+import { buildSummary } from "@/server/services/summary";
+import { listAchievements } from "@/server/services/achievements";
+import { listRecords } from "@/server/services/records";
 import { BookingForm } from "@/components/booking-form";
 import { addClientNoteAction, deleteClientNoteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
 
 const TABS = [
   ["overview", "Профиль"],
+  ["membership", "Абонемент"],
   ["programs", "Программы"],
   ["schedule", "Записи"],
   ["history", "История"],
@@ -23,7 +31,7 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
-export default async function ClientPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; created?: string }> }) {
+export default async function ClientPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; created?: string; summary?: string; ptab?: string }> }) {
   const { actor } = await requireTrainer();
   const { id } = await params;
   const sp = await searchParams;
@@ -54,8 +62,11 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
         </ul>
       </nav>
 
+      {tab === "overview" && <OverviewExtras />}
+      {tab === "membership" && <MembershipManager actor={actor} clientId={id} />}
+
       {tab === "overview" && (
-        <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="stagger mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card title="Профиль">
             <ActionForm action={updateClientProfileAction.bind(null, id)}>
               <Field label="Имя">
@@ -115,9 +126,42 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
       {tab === "programs" && <ProgramsTab clientId={id} />}
       {tab === "schedule" && <ScheduleTab clientId={id} />}
       {tab === "history" && <HistoryTab clientId={id} />}
-      {tab === "progress" && <ProgressSection actor={actor} clientId={id} />}
+      {tab === "progress" && (
+        <ProgressTabs
+          actor={actor}
+          clientId={id}
+          tab={(["exercises", "photos"].includes(sp.ptab ?? "") ? sp.ptab : "body") as ProgressTab}
+          hrefFor={(k) => `/trainer/clients/${id}?tab=progress&ptab=${k}`}
+        />
+      )}
     </>
   );
+
+  async function OverviewExtras() {
+    const period = sp.summary === "month" ? "month" : "week";
+    const [summary, badges, records] = await Promise.all([buildSummary(actor, id, period), listAchievements(actor, id), listRecords(actor, id, 3)]);
+    const earned = badges.filter((b) => b.earnedAt);
+    return (
+      <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
+        <SummaryCard text={summary.text} period={period} hrefFor={(p) => `/trainer/clients/${id}?summary=${p}`} />
+        <Card title={`Значки · ${earned.length} из ${badges.length}`}>
+          {earned.length ? (
+            <div className="grid grid-cols-4 gap-2">
+              {earned.slice(0, 8).map((b, i) => (
+                <Badge key={b.code} b={b} size="sm" index={i} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-[15px] text-muted">Пока нет значков</p>
+          )}
+        </Card>
+        <section className="min-w-0 md:col-span-2">
+          <h2 className="mb-2.5 px-1 text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">Последние рекорды</h2>
+          <RecordsList records={records} />
+        </section>
+      </div>
+    );
+  }
 
   async function ProgramsTab({ clientId }: { clientId: string }) {
     const programs = await listPrograms(actor, clientId);

@@ -19,6 +19,7 @@ enum SessionStatus {
   SCHEDULED // запланировано (после начала — ждёт заполнения результатов)
   COMPLETED // проведено, результаты внесены
   CANCELLED // отменено
+  MISSED    // клиент не пришёл (отметил тренер)
 }
 
 model User {
@@ -63,6 +64,11 @@ model ClientProfile {
   sessions    Session[]
   notes       ClientNote[]
   nutrition   NutritionTargets?
+  records      PersonalRecord[]
+  photos       ProgressPhoto[]
+  measurements BodyMeasurement[]
+  achievements ClientAchievement[]
+  memberships  Membership[]
 
   @@index([trainerId])
 }
@@ -97,6 +103,7 @@ model Exercise {
 
   programItems ProgramExercise[]
   results      SessionResult[]
+  records      PersonalRecord[]
 
   @@unique([trainerId, name])
 }
@@ -149,10 +156,14 @@ model Session {
   // Напоминания (сбрасываются при переносе)
   reminderDaySentAt   DateTime? @db.Timestamptz(3)
   reminderSoonSentAt  DateTime? @db.Timestamptz(3)
+  // Клиент подтвердил, что придёт («Приду»). Сбрасывается при переносе.
+  confirmedAt DateTime? @db.Timestamptz(3)
   createdAt   DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
 
-  results SessionResult[]
+  results          SessionResult[]
+  records          PersonalRecord[]
+  membershipEntry  MembershipEntry?
 
   @@index([trainerId, startsAt])
   @@index([clientId, startsAt])
@@ -217,4 +228,104 @@ model PushSubscription {
 model AppSetting {
   key   String @id
   value String
+}
+
+// Личный рекорд клиента в упражнении (лучший вес, при равном весе — больше повторений)
+model PersonalRecord {
+  id               String        @id @default(cuid())
+  clientId         String
+  client           ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  exerciseId       String
+  exercise         Exercise      @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  sessionId        String
+  session          Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  weightKg         Float
+  reps             Int
+  previousWeightKg Float?
+  previousReps     Int?
+  achievedAt       DateTime      @db.Timestamptz(3) // время тренировки
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@unique([sessionId, exerciseId])
+  @@index([clientId, achievedAt])
+}
+
+// Фото «до/после». Сам файл хранится вне БД (диск или S3), здесь — только ключ.
+model ProgressPhoto {
+  id           String        @id @default(cuid())
+  clientId     String
+  client       ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  takenOn      DateTime      @db.Date
+  storageKey   String        @unique
+  thumbKey     String        @unique
+  width        Int
+  height       Int
+  sizeBytes    Int
+  uploadedById String
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([clientId, takenOn])
+}
+
+// Замеры тела (вес тела хранится в BodyWeightEntry)
+model BodyMeasurement {
+  id          String        @id @default(cuid())
+  clientId    String
+  client      ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  date        DateTime      @db.Date
+  waistCm     Float?
+  hipsCm      Float?
+  chestCm     Float?
+  armCm       Float?
+  createdById String
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@unique([clientId, date])
+}
+
+// Выданный значок. Правила — в src/lib/achievements.ts
+model ClientAchievement {
+  id       String        @id @default(cuid())
+  clientId String
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  code     String
+  earnedAt DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@unique([clientId, code])
+}
+
+// Абонемент на N занятий
+model Membership {
+  id                String        @id @default(cuid())
+  clientId          String
+  client            ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  totalSessions     Int
+  remainingSessions Int
+  validFrom         DateTime      @db.Date
+  validUntil        DateTime      @db.Date
+  paidAt            DateTime?     @db.Timestamptz(3)
+  priceRub          Int?
+  note              String?
+  remindedLowAt     DateTime?     @db.Timestamptz(3) // напомнили «осталось ≤ 2»
+  remindedExpiryAt  DateTime?     @db.Timestamptz(3) // напомнили «до конца ≤ 7 дней»
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  entries           MembershipEntry[]
+
+  @@index([clientId, validUntil])
+}
+
+// Журнал движений по абонементу: списание за занятие или ручная корректировка
+model MembershipEntry {
+  id           String     @id @default(cuid())
+  membershipId String
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  sessionId    String?    @unique // одно занятие списывается не больше одного раза
+  session      Session?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  delta        Int
+  reason       String     // session | manual | payment
+  note         String?
+  createdById  String?
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+
+  @@index([membershipId, createdAt])
 }

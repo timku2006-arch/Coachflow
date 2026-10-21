@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { startOfMonth } from "date-fns";
-import { ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import { prisma } from "@/server/db";
 import { requireClient } from "@/server/auth";
 import { getClient } from "@/server/services/clients";
@@ -20,18 +20,30 @@ import { PushPrompt } from "@/components/push-setup";
 import { Welcome } from "@/components/welcome";
 import { Gauge, WeekPulse } from "@/components/viz";
 import { buildWeekPulse } from "@/lib/week-pulse";
+import { listRecords } from "@/server/services/records";
+import { currentMembership } from "@/server/services/memberships";
+import { buildSummary } from "@/server/services/summary";
+import { evaluateAchievements, listAchievements } from "@/server/services/achievements";
+import { AttendancePrompt } from "@/components/attendance";
+import { MembershipCard } from "@/components/membership-card";
+import { SummaryCard } from "@/components/summary-card";
+import { RecordBanner } from "@/components/record-banner";
+import { Badge } from "@/components/badges";
 
 export const metadata = { title: "Главная" };
 
-export default async function ClientHome({ searchParams }: { searchParams: Promise<{ hello?: string }> }) {
+export default async function ClientHome({ searchParams }: { searchParams: Promise<{ hello?: string; summary?: string }> }) {
   const { user, actor } = await requireClient();
-  const { hello } = await searchParams;
+  const { hello, summary: summaryParam } = await searchParams;
+  const period = summaryParam === "month" ? "month" : "week";
   const now = new Date();
   const weekStart = moscowWeekStart(now);
   const monthStart = new Date(startOfMonth(toMoscow(now)).getTime());
   const own = { clientId: actor.clientId };
   const active = { ...own, status: { not: "CANCELLED" as const } };
-  const [client, upcoming, program, publicKey, week, monthTotal, monthDone] = await Promise.all([
+  // значки «по времени» (например, «Месяц с тренером») проверяем при открытии главной
+  await evaluateAchievements(actor.clientId, now);
+  const [client, upcoming, program, publicKey, week, monthTotal, monthDone, records, membership, summary, badges] = await Promise.all([
     getClient(actor, actor.clientId),
     listUpcoming(actor, actor.clientId),
     getActiveProgram(actor, actor.clientId),
@@ -39,7 +51,15 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
     prisma.session.findMany({ where: { ...own, startsAt: { gte: weekStart, lt: addMoscowDays(weekStart, 7) } }, select: { startsAt: true, status: true } }),
     prisma.session.count({ where: { ...active, startsAt: { gte: monthStart, lt: new Date(startOfMonth(addMoscowDays(monthStart, 32)).getTime()) } } }),
     prisma.session.count({ where: { ...own, status: "COMPLETED", startsAt: { gte: monthStart, lte: now } } }),
+    listRecords(actor, actor.clientId, 10),
+    currentMembership(actor, actor.clientId, now),
+    buildSummary(actor, actor.clientId, period, now),
+    listAchievements(actor, actor.clientId, now),
   ]);
+  const weekAgo = addMoscowDays(now, -7);
+  const freshRecords = records.filter((r) => r.achievedAt >= weekAgo);
+  const askAttendance = upcoming.find((s) => !s.confirmedAt && s.startsAt > now && s.startsAt.getTime() - now.getTime() <= 48 * 3_600_000);
+  const earned = badges.filter((b) => b.earnedAt).sort((a, b) => b.earnedAt!.getTime() - a.earnedAt!.getTime());
   const pulse = buildWeekPulse(weekStart, week, now);
   const next = upcoming[0];
   const lastWeight = client.bodyWeights.at(-1);
@@ -59,6 +79,10 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
         }
         subtitle={client.goal ? `Цель: ${client.goal}` : undefined}
       />
+      {/* Главное действие — первым и крупно */}
+      {askAttendance && <AttendancePrompt session={askAttendance} />}
+      {freshRecords[0] && <RecordBanner record={freshRecords[0]} more={freshRecords.length - 1} />}
+      <MembershipCard membership={membership} now={now} />
       <PushPrompt publicKey={publicKey} />
 
       <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -78,6 +102,12 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
                   <div className="mt-1 text-[15px] text-muted">
                     до {formatTime(next.endsAt)} · {client.trainer.user.name}
                   </div>
+                  {next.confirmedAt && (
+                    <div className="mt-2 flex items-center gap-1.5 text-[16px] font-semibold text-mint">
+                      <CheckCircle2 size={18} />
+                      Вы придёте — ждём вас!
+                    </div>
+                  )}
                 </div>
                 <ChevronRight size={22} className="text-muted transition-transform duration-300 group-hover:translate-x-1" />
               </div>
@@ -100,6 +130,22 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
             </div>
           </Card>
         )}
+
+        <SummaryCard text={summary.text} period={period} hrefFor={(p) => (p === "month" ? "/client?summary=month" : "/client")} />
+
+        <Card title="Мои достижения" action={<MoreLink href="/client/achievements">Все</MoreLink>}>
+          {earned.length ? (
+            <Link href="/client/achievements" className="press grid grid-cols-3 gap-2">
+              {earned.slice(0, 3).map((b, i) => (
+                <Badge key={b.code} b={b} size="sm" index={i} />
+              ))}
+            </Link>
+          ) : (
+            <Link href="/client/achievements" className="press block text-[17px] text-ink-2">
+              Первый значок — после первой тренировки 💫
+            </Link>
+          )}
+        </Card>
 
         <Card title="Твоя неделя">
           <WeekPulse days={pulse} height={96} />

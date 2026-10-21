@@ -57,7 +57,7 @@ export function FormMessage({ state }: { state: FormState }) {
     );
   if (state.ok && state.message)
     return (
-      <p role="status" className="animate-pop rounded-xl bg-brand-500/15 px-4 py-3 text-[15px] text-brand-300">
+      <p role="status" className="animate-pop whitespace-pre-line rounded-2xl bg-mint/12 px-4 py-3 text-[15px] text-brand-300">
         {state.message}
       </p>
     );
@@ -70,7 +70,7 @@ export function SubmitButton({
   className,
 }: {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "danger";
+  variant?: "primary" | "secondary" | "danger" | "ghost";
   className?: string;
 }) {
   const { pending } = useFormStatus();

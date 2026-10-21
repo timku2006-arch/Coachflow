@@ -111,6 +111,7 @@ const phaseStyles: Record<SessionPhase, { text: string; dot: string }> = {
   awaiting_results: { text: "text-coral bg-coral/12", dot: "bg-coral" },
   completed: { text: "text-mint bg-mint/12", dot: "bg-mint" },
   cancelled: { text: "text-muted bg-subtle line-through", dot: "bg-faint" },
+  missed: { text: "text-coral bg-coral/12", dot: "bg-coral" },
 };
 
 export function PhaseBadge({ phase }: { phase: SessionPhase }) {

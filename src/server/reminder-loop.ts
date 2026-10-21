@@ -1,4 +1,5 @@
 import { runReminders } from "./services/reminders";
+import { runMembershipReminders } from "./services/memberships";
 
 const INTERVAL_MS = 60_000;
 let started = false;
@@ -14,6 +15,8 @@ export function startReminderLoop() {
     try {
       const n = await runReminders();
       if (n) console.log(`[reminders] отправлено напоминаний: ${n}`);
+      const m = await runMembershipReminders();
+      if (m) console.log(`[reminders] напоминаний об абонементах: ${m}`);
     } catch (e) {
       console.error("[reminders] ошибка", e);
     } finally {

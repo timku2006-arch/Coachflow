@@ -112,9 +112,13 @@ describe("напоминания", () => {
     expect(await runReminders(at(1.5 * H))).toBe(1);
     expect(await runReminders(at(1 * H))).toBe(0);
     expect(await runReminders(at(-1 * H))).toBe(0); // уже началось
-    const c = (await listNotifications(client.userId)).filter((n) => n.type === "session_reminder");
+    const c = (await listNotifications(client.userId)).filter((n) => n.type === "session_reminder" || n.type === "attendance");
     const t = (await listNotifications(trainer.userId)).filter((n) => n.type === "session_reminder");
-    expect(c.map((n) => n.title)).toEqual(["Тренировка через 2 часа ⏰", "Напоминание о тренировке"]);
+    // за сутки — вопрос «Придёте?» (запись тренера ещё не подтверждена)
+    expect(c.map((n) => [n.type, n.title])).toEqual([
+      ["session_reminder", "Тренировка через 2 часа ⏰"],
+      ["attendance", "Тренировка: Завтра в 18:00"],
+    ]);
     expect(t).toHaveLength(2);
     expect(c[0].url).toBe(`/client/sessions/${s.id}`);
   });

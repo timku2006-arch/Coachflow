@@ -1,6 +1,7 @@
 /**
  * Тестовые данные CoachFlow: один тренер, два клиента, программы,
- * прошедшие тренировки с результатами и предстоящие записи.
+ * прошедшие тренировки с результатами и предстоящие записи,
+ * рекорды, замеры и абонементы.
  * Данные строятся относительно текущей даты, поэтому seed можно перезапускать.
  */
 import { PrismaClient } from "@prisma/client";
@@ -136,6 +137,18 @@ async function main() {
       },
     });
 
+  const prev: Record<string, { weightKg: number; reps: number }> = {};
+  /** Рекорд: в seed веса растут каждую неделю, поэтому каждая тренировка после первой — рекорд. */
+  const record = async (s: { id: string; clientId: string; startsAt: Date }, exerciseId: string, weightKg: number, reps: number) => {
+    const key = s.clientId + exerciseId;
+    const before = prev[key];
+    prev[key] = { weightKg, reps };
+    if (!before) return;
+    await prisma.personalRecord.create({
+      data: { clientId: s.clientId, exerciseId, sessionId: s.id, weightKg, reps, previousWeightKg: before.weightKg, previousReps: before.reps, achievedAt: s.startsAt },
+    });
+  };
+
   const sets = (sessionId: string, exerciseId: string, weightKg: number, reps: number[]) =>
     reps.map((r, i) => ({ sessionId, exerciseId, setNumber: i + 1, weightKg, reps: r }));
 
@@ -150,6 +163,8 @@ async function main() {
         ...sets(a.id, ex["Ягодичный мост"], 30 + w * 2.5, [15, 15, 15, 14]),
       ],
     });
+    await record(a, ex["Приседания со штангой"], 25 + w * 2.5, 12);
+    await record(a, ex["Ягодичный мост"], 30 + w * 2.5, 15);
     const i = await session(ivan.id, at(-daysAgo + 1, "19:00"), { status: "COMPLETED" });
     await prisma.sessionResult.createMany({
       data: [
@@ -158,6 +173,8 @@ async function main() {
         ...sets(i.id, ex["Становая тяга"], 110 + w * 2.5, [5, 5, 5]),
       ],
     });
+    await record(i, ex["Приседания со штангой"], 90 + w * 2.5, 5);
+    await record(i, ex["Жим лёжа"], 72.5 + w * 1.25, 5);
   }
 
   // Прошедшая, но ещё не заполненная тренировка — ждёт результатов
@@ -168,11 +185,35 @@ async function main() {
   // Предстоящие записи
   const soon = new Date(Math.ceil((Date.now() + 2 * 3_600_000) / 900_000) * 900_000); // ~через 2 часа: окно закрыто
   await session(anna.id, soon, { notes: "План: техника приседа, лёгкий вес." });
-  await session(anna.id, at(2, "10:00"));
+  const annaNext = await session(anna.id, at(2, "10:00"));
+  await prisma.session.update({ where: { id: annaNext.id }, data: { confirmedAt: new Date() } });
   await session(anna.id, at(5, "10:00"));
   await session(ivan.id, at(1, "19:00"));
   await session(ivan.id, at(3, "19:00"));
   await session(ivan.id, at(6, "12:00"));
+
+  // Замеры Анны: раз в 3 недели
+  for (const [k, weeksAgo] of [6, 3, 0].entries()) {
+    const date = dateOnly(moscowDateString(addMoscowDays(new Date(), -weeksAgo * 7)));
+    await prisma.bodyMeasurement.create({
+      data: { clientId: anna.id, date, waistCm: 78 - k * 1.5, hipsCm: 100 - k, chestCm: 92 - k * 0.5, armCm: 28, createdById: trainerUser.id },
+    });
+  }
+
+  // Абонементы: у Анны заканчивается (видно напоминание «Пора продлить»), у Ивана свежий
+  const today = (offset: number) => dateOnly(moscowDateString(addMoscowDays(new Date(), offset)));
+  await prisma.membership.create({
+    data: {
+      clientId: anna.id, totalSessions: 8, remainingSessions: 2, validFrom: today(-25), validUntil: today(5), paidAt: new Date(), priceRub: 16000,
+      entries: { create: { delta: 8, reason: "manual", note: "Новый абонемент", createdById: trainerUser.id } },
+    },
+  });
+  await prisma.membership.create({
+    data: {
+      clientId: ivan.id, totalSessions: 12, remainingSessions: 9, validFrom: today(-10), validUntil: today(50), priceRub: 22000,
+      entries: { create: { delta: 12, reason: "manual", note: "Новый абонемент", createdById: trainerUser.id } },
+    },
+  });
 
   console.log("Seed готов:");
   console.log(`  Тренер:  trainer@coachflow.local / ${TRAINER_PASSWORD}`);

@@ -7,7 +7,7 @@ import { listExercises } from "@/server/services/exercises";
 import { getActiveProgram } from "@/server/services/programs";
 import { telegramLink } from "@/lib/booking-rules";
 import { formatDate, formatDateTime, formatTime, moscowDateString, moscowTimeString, relativeDayLabel } from "@/lib/time";
-import { canEnterResults } from "@/lib/session-phase";
+import { attendanceOf, canEnterResults } from "@/lib/session-phase";
 import { Avatar, Card, Notice, PhaseBadge } from "./ui";
 import { Countdown } from "./countdown";
 import { FlowWaves } from "./flow-waves";
@@ -17,13 +17,17 @@ import { ResultsEditor, type EditorSet } from "./results-editor";
 import { ActionForm, SubmitButton } from "./form";
 import { inputClass } from "./input-class";
 import { updateSessionNotesAction } from "@/app/actions/sessions";
+import { markMissedAction } from "@/app/actions/coaching";
+import { AttendanceBadge, AttendancePrompt } from "./attendance";
+import { RecordBanner } from "./record-banner";
 
 /** Карточка записи: расписание и результаты в одной цепочке. */
 export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor; sessionId: string; flash?: string }) {
   const s = await orNotFound(getSession(actor, sessionId));
   const isTrainer = actor.role === "TRAINER";
   const base = isTrainer ? "/trainer" : "/client";
-  const resultsAllowed = canEnterResults(s);
+  // Неявку тренер может исправить, внеся результаты; клиенту карточку результатов не показываем.
+  const resultsAllowed = canEnterResults(s) && (isTrainer || s.status !== "MISSED");
 
   let editor: React.ReactNode = null;
   if (isTrainer && resultsAllowed) {
@@ -52,6 +56,10 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
   }
 
   const trainerProfile = await prisma.trainerProfile.findUnique({ where: { id: s.trainerId }, select: { telegramUsername: true } });
+  const records =
+    s.status === "COMPLETED"
+      ? await prisma.personalRecord.findMany({ where: { sessionId: s.id }, include: { exercise: { select: { name: true } } }, orderBy: { weightKg: "desc" } })
+      : [];
 
   return (
     <div className="stagger space-y-4">
@@ -65,7 +73,10 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
               {relativeDayLabel(s.startsAt)}, {formatDate(s.startsAt)}
             </div>
             <h1 className="truncate font-display text-[1.6rem] font-semibold leading-tight">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
-            <PhaseBadge phase={s.phase} />
+            <div className="flex flex-wrap items-center gap-2">
+              <PhaseBadge phase={s.phase} />
+              {isTrainer && <AttendanceBadge value={attendanceOf(s)} />}
+            </div>
           </div>
         </div>
         <div className="relative mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-white/[0.06] pt-3">
@@ -88,6 +99,8 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
         </div>
       </div>
       {flash && <Notice>{flash}</Notice>}
+      {records[0] && <RecordBanner record={records[0]} more={records.length - 1} moreSuffix=" в этой тренировке" />}
+      {!isTrainer && s.status === "SCHEDULED" && s.phase === "upcoming" && !s.confirmedAt && <AttendancePrompt session={s} />}
 
       {s.status === "SCHEDULED" && s.phase === "upcoming" && (
         <Card title="Запись">
@@ -105,6 +118,20 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
       {s.status === "CANCELLED" && (
         <Card>
           <p className="text-sm text-ink-2">Занятие отменено{s.cancelledAt ? ` ${formatDateTime(s.cancelledAt)}` : ""}.</p>
+        </Card>
+      )}
+
+      {isTrainer && s.status === "SCHEDULED" && s.phase === "awaiting_results" && (
+        <ActionForm action={markMissedAction.bind(null, s.id)} confirm="Отметить, что клиент не пришёл?">
+          <SubmitButton variant="ghost" className="w-full">
+            Клиент не пришёл
+          </SubmitButton>
+        </ActionForm>
+      )}
+
+      {s.status === "MISSED" && (
+        <Card>
+          <p className="text-sm text-ink-2">Клиент не пришёл на занятие.</p>
         </Card>
       )}
 

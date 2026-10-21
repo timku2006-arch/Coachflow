@@ -26,6 +26,8 @@ ENV NODE_ENV=production \
 # CLI Prisma — только для применения миграций при старте
 RUN npm install -g prisma@6.19.3 && npm cache clean --force
 RUN addgroup -S app && adduser -S app -G app
+# Фото прогресса (если не задано хранилище S3). Подключите сюда постоянный диск.
+RUN mkdir -p /app/data/uploads && chown -R app:app /app/data
 COPY --from=build --chown=app:app /app/.next/standalone ./
 COPY --from=build --chown=app:app /app/.next/static ./.next/static
 COPY --from=build --chown=app:app /app/public ./public

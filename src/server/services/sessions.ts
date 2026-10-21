@@ -4,12 +4,14 @@ import type { Actor } from "../actor";
 import { assertClientAccess, assertTrainer } from "../access";
 import { AppError, notFound } from "../errors";
 import { createSessionSchema, sessionResultsSchema, sessionTimeSchema, optionalText } from "@/lib/validation";
-import { SESSION_DURATION_MIN, addMinutes, addMoscowDays, moscowLocalToDate } from "@/lib/time";
+import { SESSION_DURATION_MIN, addMinutes, addMoscowDays, formatDateTime, moscowLocalToDate } from "@/lib/time";
 import { CLIENT_CHANGE_WINDOW_HOURS, clientCanChangeSession } from "@/lib/booking-rules";
 import { canEnterResults, sessionPhase } from "@/lib/session-phase";
 import { assertOwnExercises } from "./exercises";
 import { onResultsSaved, onSessionBooked, onSessionCancelled, onSessionRescheduled } from "./events";
 import { REMINDER_DAY_MS, REMINDER_SOON_MS } from "./reminders";
+import { afterSessionCompleted } from "./session-hooks";
+import { notify } from "./notifications";
 import { z } from "zod";
 
 const MAX_RANGE_DAYS = 366;
@@ -108,7 +110,16 @@ export async function createSession(actor: Actor, input: unknown, now: Date = ne
     prisma.$transaction(async (tx) => {
       await assertSlotFree(tx, actor.trainerId, startsAt, endsAt);
       return tx.session.create({
-        data: { trainerId: actor.trainerId, clientId, startsAt, endsAt, createdById: actor.userId, ...reminderFlags(startsAt, now) },
+        data: {
+          trainerId: actor.trainerId,
+          clientId,
+          startsAt,
+          endsAt,
+          createdById: actor.userId,
+          // клиент записался сам — значит, придёт; запись тренера ждёт подтверждения
+          confirmedAt: actor.role === "CLIENT" ? now : null,
+          ...reminderFlags(startsAt, now),
+        },
       });
     }),
   );
@@ -131,7 +142,10 @@ export async function rescheduleSession(actor: Actor, sessionId: string, input: 
   const updated = await withOverlapGuard(() =>
     prisma.$transaction(async (tx) => {
       await assertSlotFree(tx, s.trainerId, startsAt, endsAt, s.id);
-      return tx.session.update({ where: { id: s.id }, data: { startsAt, endsAt, ...reminderFlags(startsAt, now) } });
+      return tx.session.update({
+        where: { id: s.id },
+        data: { startsAt, endsAt, confirmedAt: actor.role === "CLIENT" ? now : null, ...reminderFlags(startsAt, now) },
+      });
     }),
   );
   await onSessionRescheduled(actor, s, updated);
@@ -250,6 +264,7 @@ export async function saveSessionResults(actor: Actor, sessionId: string, input:
     prisma.session.update({ where: { id: s.id }, data: { status: "COMPLETED", notes: data.notes } }),
   ]);
   if (rows.length > 0) await onResultsSaved(s, s.status !== "COMPLETED", rows);
+  return afterSessionCompleted(s.id);
 }
 
 /** Заметка тренера к тренировке (можно и до занятия — как план). */
@@ -258,4 +273,32 @@ export async function updateSessionNotes(actor: Actor, sessionId: string, input:
   const s = await loadSession(actor, sessionId);
   const { notes } = z.object({ notes: optionalText(2000) }).parse(input);
   return prisma.session.update({ where: { id: s.id }, data: { notes } });
+}
+
+// ---------------------------------------------------------------- явка
+/** Клиент нажал «Приду». Повторное нажатие ничего не меняет. */
+export async function confirmAttendance(actor: Actor, sessionId: string, now: Date = new Date()) {
+  if (actor.role !== "CLIENT") throw new AppError("FORBIDDEN", "Подтверждает явку клиент");
+  const s = await loadSession(actor, sessionId);
+  if (s.status !== "SCHEDULED") throw new AppError("CONFLICT", "Эта запись уже неактуальна");
+  if (s.startsAt <= now) throw new AppError("CONFLICT", "Тренировка уже началась");
+  if (s.confirmedAt) return s;
+  const updated = await prisma.session.update({ where: { id: s.id }, data: { confirmedAt: now } });
+  await notify([s.trainer.userId], {
+    type: "attendance",
+    title: `${s.client.user.name} придёт`,
+    body: `${formatDateTime(s.startsAt)}`,
+    url: `/trainer/sessions/${s.id}`,
+    collapse: true,
+  });
+  return updated;
+}
+
+/** Тренер отмечает неявку: занятие прошло, клиента не было. */
+export async function markMissed(actor: Actor, sessionId: string, now: Date = new Date()) {
+  assertTrainer(actor);
+  const s = await loadSession(actor, sessionId);
+  if (s.status !== "SCHEDULED") throw new AppError("CONFLICT", "Отметить неявку можно только у запланированного занятия");
+  if (s.startsAt > now) throw new AppError("CONFLICT", "Занятие ещё не началось");
+  return prisma.session.update({ where: { id: s.id }, data: { status: "MISSED" } });
 }

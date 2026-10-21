@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../db";
-import { getPushSender, getVapid, type PushPayload } from "../push";
+import { getPushSender, getVapid, type PushAction, type PushPayload } from "../push";
 
 export type NotificationType =
   | "session_booked"
@@ -10,6 +10,10 @@ export type NotificationType =
   | "results_ready"
   | "program_updated"
   | "nutrition_updated"
+  | "record"
+  | "achievement"
+  | "membership"
+  | "attendance"
   | "test";
 
 export type NotifyInput = {
@@ -23,6 +27,9 @@ export type NotifyInput = {
    * Полезно, когда тренер несколько раз подряд правит программу.
    */
   collapse?: boolean;
+  /** Кнопки в push-уведомлении (Android, компьютер; на iPhone откроется ссылка). */
+  actions?: PushAction[];
+  sessionId?: string;
 };
 
 const COLLAPSE_MS = 10 * 60_000;
@@ -59,7 +66,7 @@ export async function notify(userIds: (string | null | undefined)[], n: NotifyIn
       toPush.push(userId);
     }
     if (toPush.length) {
-      const p = deliver(toPush, { title: n.title, body: n.body, url: n.url, tag: n.type }).finally(() => pending.delete(p));
+      const p = deliver(toPush, { title: n.title, body: n.body, url: n.url, tag: n.type, actions: n.actions, sessionId: n.sessionId }).finally(() => pending.delete(p));
       pending.add(p);
     }
   } catch (e) {

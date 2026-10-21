@@ -41,12 +41,22 @@ export async function runReminders(now: Date = new Date()): Promise<number> {
         await notify([s.client.userId], { type: "session_reminder", title: "Тренировка через 2 часа ⏰", body: `${at}. До встречи!`, url: `/client/sessions/${s.id}` });
         await notify([s.trainer.userId], { type: "session_reminder", title: `Скоро тренировка: ${s.client.user.name}`, body: at, url: `/trainer/sessions/${s.id}` });
       } else {
-        await notify([s.client.userId], {
-          type: "session_reminder",
-          title: "Напоминание о тренировке",
-          body: `${at}. Перенести или отменить можно не позднее чем за 3 часа.`,
-          url: `/client/sessions/${s.id}`,
-        });
+        if (s.confirmedAt) {
+          await notify([s.client.userId], { type: "session_reminder", title: `Тренировка: ${at}`, body: "Ждём вас!", url: `/client/sessions/${s.id}` });
+        } else {
+          // Вопрос с двумя кнопками. На iPhone кнопок в уведомлении нет — нажатие откроет экран с ними.
+          await notify([s.client.userId], {
+            type: "attendance",
+            title: `Тренировка: ${at}`,
+            body: "Придёте? Нажмите, чтобы ответить.",
+            url: `/client/sessions/${s.id}/confirm`,
+            sessionId: s.id,
+            actions: [
+              { action: "confirm", title: "Приду" },
+              { action: "decline", title: "Не смогу" },
+            ],
+          });
+        }
         await notify([s.trainer.userId], { type: "session_reminder", title: `Тренировка: ${s.client.user.name}`, body: at, url: `/trainer/sessions/${s.id}` });
       }
       sent++;
