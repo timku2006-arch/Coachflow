@@ -14,18 +14,20 @@ import { deleteBodyWeightAction } from "@/app/actions/sessions";
 import { deleteMeasurementAction, saveMeasurementAction } from "@/app/actions/coaching";
 import { RecordsList } from "./records-list";
 import { PhotosPanel } from "./photos-panel";
+import { PHOTOS_ENABLED } from "@/lib/features";
 
 export type ProgressTab = "body" | "exercises" | "photos";
 const TABS: [ProgressTab, string][] = [
   ["body", "Тело"],
   ["exercises", "Упражнения"],
   ["photos", "Фото"],
-];
+].filter(([k]) => k !== "photos" || PHOTOS_ENABLED) as [ProgressTab, string][];
 const COLORS = ["#a99bff", "#3ef2c5", "#ff7a59", "#7cd9f0", "#ffc861"];
 const num = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 1 });
 
 /** Прогресс клиента вкладками. Используется и клиентом, и тренером. */
-export async function ProgressTabs({ actor, clientId, tab, hrefFor }: { actor: Actor; clientId: string; tab: ProgressTab; hrefFor: (t: ProgressTab) => string }) {
+export async function ProgressTabs({ actor, clientId, tab: requested, hrefFor }: { actor: Actor; clientId: string; tab: ProgressTab; hrefFor: (t: ProgressTab) => string }) {
+  const tab = TABS.some(([k]) => k === requested) ? requested : "body";
   return (
     <>
       <nav className="mb-5 flex rounded-full bg-surface p-1 ring-1 ring-inset ring-white/5" aria-label="Разделы прогресса">

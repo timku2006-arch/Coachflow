@@ -5,8 +5,10 @@ import { getCurrentUser, toActor } from "@/server/auth";
 import { uploadPhoto } from "@/server/services/photos";
 import { AppError } from "@/server/errors";
 import { MAX_UPLOAD_BYTES } from "@/server/images";
+import { PHOTOS_ENABLED } from "@/lib/features";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ clientId: string }> }) {
+  if (!PHOTOS_ENABLED) return NextResponse.json({ error: "Фото пока недоступны" }, { status: 404 });
   const origin = req.headers.get("origin");
   if (origin && new URL(origin).host !== req.headers.get("host")) return NextResponse.json({ error: "Запрос с чужого сайта" }, { status: 403 });
   const user = await getCurrentUser();
