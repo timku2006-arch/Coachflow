@@ -45,6 +45,15 @@ export async function updateClientProfileAction(clientId: string, _: FormState, 
   });
 }
 
+export async function deleteClientAction(clientId: string, _: FormState): Promise<FormState> {
+  return handle(async () => {
+    const { actor } = await requireTrainer();
+    const name = await clients.deleteClient(actor, clientId);
+    refresh();
+    redirect(`/trainer/clients?deleted=${encodeURIComponent(name)}`);
+  });
+}
+
 export async function setNutritionAction(clientId: string, _: FormState, fd: FormData): Promise<FormState> {
   return handle(async () => {
     const { actor } = await requireTrainer();

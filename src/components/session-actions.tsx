@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ActionForm, SubmitButton, buttonClass } from "./form";
 import { cancelSessionAction, rescheduleSessionAction } from "@/app/actions/sessions";
 import { CLIENT_CHANGE_WINDOW_HOURS } from "@/lib/booking-rules";
+import { SESSION_DURATIONS } from "@/lib/time";
 import { CalendarClock, Clock3, Send, X } from "lucide-react";
 import { inputClass } from "./input-class";
 
@@ -16,9 +17,11 @@ type Props = {
   telegramUrl: string | null;
   defaultDate: string;
   defaultTime: string;
+  /** Текущая длительность, минут — тренер может её поменять при переносе. */
+  defaultDuration: number;
 };
 
-export function SessionActions({ sessionId, role, canChange, telegramUrl, defaultDate, defaultTime }: Props) {
+export function SessionActions({ sessionId, role, canChange, telegramUrl, defaultDate, defaultTime, defaultDuration }: Props) {
   const [mode, setMode] = useState<"idle" | "reschedule">("idle");
   const [flash, setFlash] = useState<string>();
   const router = useRouter();
@@ -57,8 +60,20 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
               <input name="time" type="time" step={900} required defaultValue={defaultTime} className={inputClass} />
             </label>
           </div>
+          {role === "TRAINER" && (
+            <label className="block text-sm">
+              <span className="mb-1.5 block text-[13px] font-semibold text-muted">Длительность</span>
+              <select name="durationMin" defaultValue={defaultDuration} className={inputClass}>
+                {SESSION_DURATIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {m} минут
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <div className="flex gap-2">
-            <SubmitButton>Перенести</SubmitButton>
+            <SubmitButton>{role === "TRAINER" ? "Сохранить" : "Перенести"}</SubmitButton>
             <button type="button" className={buttonClass("secondary")} onClick={() => setMode("idle")}>
               Отмена
             </button>
@@ -67,7 +82,7 @@ export function SessionActions({ sessionId, role, canChange, telegramUrl, defaul
       ) : (
         <div className="flex flex-wrap gap-2">
           <button type="button" className={buttonClass("secondary")} onClick={() => setMode("reschedule")}>
-            <CalendarClock size={17} /> Перенести
+            <CalendarClock size={17} /> {role === "TRAINER" ? "Изменить время" : "Перенести"}
           </button>
           <ActionForm action={cancelSessionAction.bind(null, sessionId)} onState={onState} confirm="Отменить занятие?">
             <SubmitButton variant="danger">

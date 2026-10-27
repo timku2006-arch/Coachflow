@@ -25,9 +25,15 @@ export const phaseLabel: Record<SessionPhase, string> = {
   missed: "Не пришёл",
 };
 
-/** Можно ли вносить результаты (после начала занятия, кроме отменённых). */
+/** За сколько минут до начала тренер уже может открыть карточку результатов. */
+export const RESULTS_EARLY_MIN = 15;
+
+/** Можно ли вносить результаты (за 15 минут до начала и позже, кроме отменённых). */
 export const canEnterResults = (s: S, now: Date = new Date()) =>
-  s.status !== "CANCELLED" && now >= s.startsAt;
+  s.status !== "CANCELLED" && now.getTime() >= s.startsAt.getTime() - RESULTS_EARLY_MIN * 60_000;
+
+/** Тренировку можно вести «вживую»: запланирована и уже можно вносить результаты, но ещё не закончилась. */
+export const isLive = (s: S, now: Date = new Date()) => s.status === "SCHEDULED" && canEnterResults(s, now) && now < s.endsAt;
 
 /** Пропуск = отмена или неявка. */
 export const isSkipped = (s: { status: SessionStatusValue }) => s.status === "CANCELLED" || s.status === "MISSED";

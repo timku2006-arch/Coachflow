@@ -5,9 +5,9 @@ import { orNotFound } from "@/server/page-utils";
 import { getClient } from "@/server/services/clients";
 import { listPrograms } from "@/server/services/programs";
 import { listHistory, listUpcoming } from "@/server/services/sessions";
-import { formatDate, formatDateTime, plural } from "@/lib/time";
+import { SESSION_DURATIONS, formatDate, formatDateTime, plural } from "@/lib/time";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { Card, Empty, Field, Input, LinkButton, Notice, PageHeader, Textarea } from "@/components/ui";
+import { Card, Empty, Field, Input, LinkButton, Notice, PageHeader, Select, Textarea } from "@/components/ui";
 import { SessionList } from "@/components/session-list";
 import { HistoryList } from "@/components/history-list";
 import { ProgressTabs, type ProgressTab } from "@/components/progress-section";
@@ -19,7 +19,7 @@ import { buildSummary } from "@/server/services/summary";
 import { listAchievements } from "@/server/services/achievements";
 import { listRecords } from "@/server/services/records";
 import { BookingForm } from "@/components/booking-form";
-import { addClientNoteAction, deleteClientNoteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
+import { addClientNoteAction, deleteClientAction, deleteClientNoteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
 
 const TABS = [
   ["overview", "Профиль"],
@@ -78,6 +78,15 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
               <Field label="Цель">
                 <Textarea name="goal" defaultValue={client.goal ?? ""} maxLength={500} />
               </Field>
+              <Field label="Длительность тренировки" hint="Подставляется при записи. Уже созданные записи не меняются.">
+                <Select name="sessionDurationMin" defaultValue={client.sessionDurationMin}>
+                  {SESSION_DURATIONS.map((m) => (
+                    <option key={m} value={m}>
+                      {m} минут
+                    </option>
+                  ))}
+                </Select>
+              </Field>
               <SubmitButton variant="secondary">Сохранить</SubmitButton>
             </ActionForm>
           </Card>
@@ -119,6 +128,18 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
                 </li>
               ))}
             </ul>
+          </Card>
+          <Card title="Удаление" className="md:col-span-2">
+            <p className="mb-3 text-[15px] text-muted">
+              Вход: <span className="font-semibold text-ink-2">{client.user.email}</span>. Если клиент ушёл или аккаунт создан с ошибкой, его можно удалить. Вместе с ним
+              удалятся все записи, результаты, программы, замеры и абонементы. Отменить это нельзя.
+            </p>
+            <ActionForm
+              action={deleteClientAction.bind(null, id)}
+              confirm={`Удалить клиента ${client.user.name} и все его данные? Отменить это нельзя.`}
+            >
+              <SubmitButton variant="danger">Удалить клиента</SubmitButton>
+            </ActionForm>
           </Card>
         </div>
       )}
@@ -198,7 +219,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
           <SessionList sessions={upcoming} href={(s) => `/trainer/sessions/${s}`} empty="Нет предстоящих занятий" />
         </Card>
         <Card title="Записать на занятие">
-          <BookingForm clients={[{ id: clientId, name: client.user.name }]} defaultClientId={clientId} />
+          <BookingForm clients={[{ id: clientId, name: client.user.name, durationMin: client.sessionDurationMin }]} defaultClientId={clientId} />
         </Card>
       </div>
     );

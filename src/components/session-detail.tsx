@@ -17,6 +17,7 @@ import { ResultsEditor, type EditorSet } from "./results-editor";
 import { ActionForm, SubmitButton } from "./form";
 import { inputClass } from "./input-class";
 import { updateSessionNotesAction } from "@/app/actions/sessions";
+import { resultsDraftSchema } from "@/lib/validation";
 import { markMissedAction } from "@/app/actions/coaching";
 import { AttendanceBadge, AttendancePrompt } from "./attendance";
 import { RecordBanner } from "./record-banner";
@@ -26,8 +27,9 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
   const s = await orNotFound(getSession(actor, sessionId));
   const isTrainer = actor.role === "TRAINER";
   const base = isTrainer ? "/trainer" : "/client";
-  // Неявку тренер может исправить, внеся результаты; клиенту карточку результатов не показываем.
-  const resultsAllowed = canEnterResults(s) && (isTrainer || s.status !== "MISSED");
+  // Тренер открывает карточку за 15 минут до начала и может исправить неявку, внеся результаты.
+  // Клиент видит результаты только после начала и не при неявке.
+  const resultsAllowed = canEnterResults(s) && (isTrainer || (s.phase !== "upcoming" && s.status !== "MISSED"));
 
   let editor: React.ReactNode = null;
   if (isTrainer && resultsAllowed) {
@@ -51,6 +53,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
         initialSets={initialSets}
         initialNotes={s.notes ?? ""}
         completed={s.status === "COMPLETED"}
+        draft={s.status === "SCHEDULED" ? (resultsDraftSchema.safeParse(s.resultsDraft).data ?? null) : null}
       />
     );
   }
@@ -111,6 +114,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
             telegramUrl={telegramLink(trainerProfile?.telegramUsername)}
             defaultDate={moscowDateString(s.startsAt)}
             defaultTime={moscowTimeString(s.startsAt)}
+            defaultDuration={Math.round((s.endsAt.getTime() - s.startsAt.getTime()) / 60_000)}
           />
         </Card>
       )}
@@ -136,7 +140,7 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
       )}
 
       {resultsAllowed && (
-        <Card title="Результаты">
+        <Card title={isTrainer && s.status === "SCHEDULED" ? "Ведём тренировку" : "Результаты"}>
           {isTrainer ? (
             editor
           ) : (

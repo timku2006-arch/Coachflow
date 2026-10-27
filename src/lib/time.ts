@@ -5,8 +5,9 @@ import { ru } from "date-fns/locale";
 /** Часовой пояс приложения: все расчёты «по календарю» и отображение — в нём. */
 export const APP_TZ = "Europe/Moscow";
 
-/** Длительность одного занятия. */
+/** Длительность занятия по умолчанию и допустимые варианты, минут. */
 export const SESSION_DURATION_MIN = 90;
+export const SESSION_DURATIONS = [60, 75, 90] as const;
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;

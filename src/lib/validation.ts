@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isDateString, isTimeString } from "./time";
+import { SESSION_DURATIONS, isDateString, isTimeString } from "./time";
 
 /** Пустая строка из формы → undefined. */
 const emptyToUndefined = (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v);
@@ -33,6 +33,15 @@ export const password = z
 export const dateString = z.string().refine(isDateString, "Некорректная дата");
 export const timeString = z.string().refine(isTimeString, "Некорректное время");
 export const id = z.string().min(1).max(64);
+
+/** Длительность занятия: 60, 75 или 90 минут. Пустое поле — не задано. */
+export const durationMin = z.preprocess(
+  emptyToUndefined,
+  z.coerce
+    .number()
+    .refine((v) => (SESSION_DURATIONS as readonly number[]).includes(v), "Длительность: 60, 75 или 90 минут")
+    .optional(),
+);
 
 // ---- Аутентификация ----
 export const loginSchema = z.object({ email, password: z.string().min(1, "Введите пароль").max(128) });
@@ -74,6 +83,7 @@ export const clientProfileSchema = z.object({
   name: requiredText(100, "Имя"),
   heightCm,
   goal: optionalText(500),
+  sessionDurationMin: durationMin,
 });
 
 export const createClientSchema = z.object({
@@ -82,6 +92,7 @@ export const createClientSchema = z.object({
   password,
   heightCm,
   goal: optionalText(500),
+  sessionDurationMin: durationMin,
 });
 
 export const bodyWeightSchema = z.object({
@@ -117,7 +128,8 @@ export const programSchema = z.object({
 });
 
 // ---- Записи и результаты ----
-export const sessionTimeSchema = z.object({ date: dateString, time: timeString });
+// durationMin задаёт только тренер; если не указана — берётся длительность клиента (при переносе — прежняя)
+export const sessionTimeSchema = z.object({ date: dateString, time: timeString, durationMin });
 
 export const createSessionSchema = sessionTimeSchema.extend({ clientId: id.optional() });
 
@@ -131,6 +143,16 @@ export const sessionResultsSchema = z.object({
   notes: optionalText(2000),
   sets: z.array(resultSetSchema).max(200, "Не больше 200 подходов"),
 });
+
+/** Черновик во время тренировки: поля как в редакторе, могут быть пустыми. */
+export const resultsDraftSchema = z.object({
+  notes: z.string().max(2000),
+  sets: z
+    .array(z.object({ exerciseId: id, weightKg: z.string().max(12), reps: z.string().max(12) }))
+    .max(200, "Не больше 200 подходов"),
+  savedAt: z.number().int().positive(),
+});
+export type ResultsDraft = z.infer<typeof resultsDraftSchema>;
 
 // ---- Замеры тела
 const cm = (label: string) =>

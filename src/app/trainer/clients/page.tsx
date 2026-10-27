@@ -2,13 +2,14 @@ import Link from "next/link";
 import { requireTrainer } from "@/server/auth";
 import { listClients } from "@/server/services/clients";
 import { formatDateTime } from "@/lib/time";
-import { Avatar, Card, Empty, LinkButton, PageHeader } from "@/components/ui";
+import { Avatar, Card, Empty, LinkButton, Notice, PageHeader } from "@/components/ui";
 import { ChevronRight, UserPlus, Users } from "lucide-react";
 
 export const metadata = { title: "Клиенты" };
 
-export default async function ClientsPage() {
+export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ deleted?: string }> }) {
   const { actor } = await requireTrainer();
+  const { deleted } = await searchParams;
   const clients = await listClients(actor);
   return (
     <>
@@ -17,6 +18,7 @@ export default async function ClientsPage() {
             <UserPlus size={17} /> Новый клиент
           </LinkButton>
         } />
+      {deleted && <Notice>Клиент {deleted.slice(0, 100)} удалён</Notice>}
       <Card>
         {clients.length === 0 ? (
           <Empty icon={<Users size={28} />}>Клиентов пока нет. Создайте первого!</Empty>

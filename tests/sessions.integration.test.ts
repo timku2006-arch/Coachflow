@@ -160,7 +160,7 @@ describe("права доступа", () => {
 });
 
 describe("запись → карточка результатов", () => {
-  it("до начала результаты внести нельзя, после — можно, статус COMPLETED", async () => {
+  it("раньше чем за 15 минут до начала результаты внести нельзя, после — можно, статус COMPLETED", async () => {
     const s = await book();
     const bench = await createExercise(trainer, { name: "Жим лёжа" });
     const squat = await createExercise(trainer, { name: "Присед" });
@@ -172,7 +172,7 @@ describe("запись → карточка результатов", () => {
         { exerciseId: squat.id, weightKg: 80, reps: 6 },
       ],
     };
-    await expectCode(saveSessionResults(trainer, s.id, input, at(M)), "CONFLICT");
+    await expectCode(saveSessionResults(trainer, s.id, input, at(16 * M)), "CONFLICT");
     await saveSessionResults(trainer, s.id, input, at(-2 * H));
     const full = await getSession(client, s.id, at(-2 * H));
     expect(full.status).toBe("COMPLETED");

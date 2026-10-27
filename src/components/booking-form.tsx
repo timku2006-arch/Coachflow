@@ -1,10 +1,25 @@
 import { ActionForm, SubmitButton } from "./form";
 import { Field, Input, Select } from "./ui";
 import { createSessionAction } from "@/app/actions/sessions";
-import { SESSION_DURATION_MIN, addMoscowDays, moscowDateString } from "@/lib/time";
+import { SESSION_DURATION_MIN, SESSION_DURATIONS, addMoscowDays, moscowDateString } from "@/lib/time";
 import { CLIENT_CHANGE_WINDOW_HOURS } from "@/lib/booking-rules";
 
-export function BookingForm({ clients, defaultClientId, defaultDate }: { clients?: { id: string; name: string }[]; defaultClientId?: string; defaultDate?: string }) {
+/**
+ * Форма записи. Тренер может выбрать длительность; по умолчанию — длительность клиента из его профиля.
+ * Клиент длительность не выбирает: она подставляется сама (durationMin — для подсказки).
+ */
+export function BookingForm({
+  clients,
+  defaultClientId,
+  defaultDate,
+  durationMin = SESSION_DURATION_MIN,
+}: {
+  clients?: { id: string; name: string; durationMin?: number }[];
+  defaultClientId?: string;
+  defaultDate?: string;
+  durationMin?: number;
+}) {
+  const single = clients?.length === 1 ? clients[0] : undefined;
   return (
     <ActionForm action={createSessionAction}>
       {clients && (
@@ -29,10 +44,22 @@ export function BookingForm({ clients, defaultClientId, defaultDate }: { clients
           <Input name="time" type="time" required step={900} defaultValue="10:00" />
         </Field>
       </div>
-      <p className="text-xs text-muted">
-        Длительность — {SESSION_DURATION_MIN} минут.
-        {!clients && ` Запись возможна не позднее чем за ${CLIENT_CHANGE_WINDOW_HOURS} часа до начала.`}
-      </p>
+      {clients ? (
+        <Field label="Длительность">
+          <Select name="durationMin" defaultValue="">
+            <option value="">{single?.durationMin ? `Как обычно — ${single.durationMin} мин` : "Как обычно у клиента"}</option>
+            {SESSION_DURATIONS.map((m) => (
+              <option key={m} value={m}>
+                {m} минут
+              </option>
+            ))}
+          </Select>
+        </Field>
+      ) : (
+        <p className="text-xs text-muted">
+          Длительность — {durationMin} минут. Запись возможна не позднее чем за {CLIENT_CHANGE_WINDOW_HOURS} часа до начала.
+        </p>
+      )}
       <SubmitButton className="w-full sm:w-auto">Записать</SubmitButton>
     </ActionForm>
   );

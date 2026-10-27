@@ -1,6 +1,7 @@
 import { requireTrainer } from "@/server/auth";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { Card, Field, Input, PageHeader, Textarea } from "@/components/ui";
+import { Card, Field, Input, PageHeader, Select, Textarea } from "@/components/ui";
+import { SESSION_DURATION_MIN, SESSION_DURATIONS } from "@/lib/time";
 import { createClientAction } from "@/app/actions/trainer";
 
 export const metadata = { title: "Новый клиент" };
@@ -26,6 +27,15 @@ export default async function NewClientPage() {
           </Field>
           <Field label="Цель">
             <Textarea name="goal" maxLength={500} placeholder="Например: снизить вес на 5 кг" />
+          </Field>
+          <Field label="Длительность тренировки">
+            <Select name="sessionDurationMin" defaultValue={SESSION_DURATION_MIN}>
+              {SESSION_DURATIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m} минут
+                </option>
+              ))}
+            </Select>
           </Field>
           <SubmitButton>Создать клиента</SubmitButton>
         </ActionForm>

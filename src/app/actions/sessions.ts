@@ -51,6 +51,17 @@ export async function saveResultsAction(sessionId: string, _: FormState, fd: For
   });
 }
 
+/**
+ * Автосохранение черновика во время тренировки. Страницу не обновляем —
+ * тренер в это время печатает.
+ */
+export async function saveResultsDraftAction(sessionId: string, draft: unknown): Promise<FormState> {
+  return handle(async () => {
+    const { actor } = await requireActor();
+    await sessions.saveResultsDraft(actor, sessionId, draft);
+  });
+}
+
 export async function updateSessionNotesAction(sessionId: string, _: FormState, fd: FormData): Promise<FormState> {
   return handle(async () => {
     const { actor } = await requireActor();

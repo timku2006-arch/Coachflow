@@ -57,6 +57,8 @@ model ClientProfile {
   trainer   TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Restrict)
   heightCm  Int?
   goal      String?
+  // Длительность занятия по умолчанию: 60, 75 или 90 минут
+  sessionDurationMin Int   @default(90)
   createdAt DateTime       @default(now()) @db.Timestamptz(3)
 
   bodyWeights BodyWeightEntry[]
@@ -158,6 +160,8 @@ model Session {
   reminderSoonSentAt  DateTime? @db.Timestamptz(3)
   // Клиент подтвердил, что придёт («Приду»). Сбрасывается при переносе.
   confirmedAt DateTime? @db.Timestamptz(3)
+  // Черновик результатов, который тренер заполняет во время тренировки (до «Завершить»)
+  resultsDraft Json?
   createdAt   DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
 

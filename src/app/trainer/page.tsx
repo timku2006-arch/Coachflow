@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { startOfDay } from "date-fns";
-import { Plus } from "lucide-react";
+import { Dumbbell, Plus } from "lucide-react";
 import { prisma } from "@/server/db";
 import { requireTrainer } from "@/server/auth";
 import { listAwaitingResults } from "@/server/services/sessions";
 import { vapidPublicKey } from "@/server/services/notifications";
-import { addMoscowDays, formatLongDate, moscowWeekStart, plural, toMoscow } from "@/lib/time";
+import { addMoscowDays, formatLongDate, formatTime, moscowWeekStart, plural, toMoscow } from "@/lib/time";
+import { isLive } from "@/lib/session-phase";
 import { buildWeekPulse } from "@/lib/week-pulse";
 import { Card, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
 import { SessionList } from "@/components/session-list";
@@ -46,6 +47,7 @@ export default async function TrainerHome({ searchParams }: { searchParams: Prom
   const weekDone = pulse.reduce((a, d) => a + d.done, 0);
   const todayActive = today.filter((s) => s.status !== "CANCELLED");
   const firstName = user.name.split(" ")[0];
+  const live = today.find((s) => isLive(s, now));
 
   return (
     <>
@@ -76,6 +78,20 @@ export default async function TrainerHome({ searchParams }: { searchParams: Prom
         </Notice>
       )}
       <PushPrompt publicKey={publicKey} />
+      {live && (
+        <Link href={`/trainer/sessions/${live.id}`} className="press glass mb-5 flex animate-pop items-center gap-4 rounded-[2rem] p-5 ring-1 ring-inset ring-mint/30">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-mint text-on-brand shadow-glow">
+            <Dumbbell size={28} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-semibold uppercase tracking-[0.12em] text-mint">
+              {live.startsAt > now ? "Скоро тренировка" : "Идёт тренировка"} · {formatTime(live.startsAt)}–{formatTime(live.endsAt)}
+            </span>
+            <span className="block truncate font-display text-[1.35rem] font-semibold">{live.client.user.name}</span>
+            <span className="block text-[15px] text-muted">Вносить подходы →</span>
+          </span>
+        </Link>
+      )}
 
       <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
         <Card title="Твоя неделя" className="md:row-span-2">

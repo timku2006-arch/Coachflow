@@ -13,6 +13,7 @@ import {
 } from "@/lib/validation";
 import { dateOnly } from "@/lib/time";
 import { onNutritionChanged } from "./events";
+import { getStorage } from "../storage";
 
 export async function listClients(actor: TrainerActor) {
   assertTrainer(actor);
@@ -43,7 +44,7 @@ export async function createClient(actor: Actor, input: unknown) {
         role: "CLIENT",
         mustChangePassword: true,
         clientProfile: {
-          create: { trainerId: actor.trainerId, heightCm: data.heightCm, goal: data.goal },
+          create: { trainerId: actor.trainerId, heightCm: data.heightCm, goal: data.goal, sessionDurationMin: data.sessionDurationMin },
         },
       },
       include: { clientProfile: true },
@@ -79,8 +80,36 @@ export async function updateClientProfile(actor: Actor, clientId: string, input:
   const data = clientProfileSchema.parse(input);
   return prisma.clientProfile.update({
     where: { id: clientId },
-    data: { heightCm: data.heightCm, goal: data.goal, user: { update: { name: data.name } } },
+    data: {
+      heightCm: data.heightCm,
+      goal: data.goal,
+      // длительность занятий задаёт тренер
+      ...(actor.role === "TRAINER" && data.sessionDurationMin ? { sessionDurationMin: data.sessionDurationMin } : {}),
+      user: { update: { name: data.name } },
+    },
   });
+}
+
+/**
+ * Удаляет клиента целиком: аккаунт, записи, результаты, программы, замеры, абонементы, фото.
+ * Отменить нельзя. Уведомления тренера о нём тоже убираются, чтобы не вели на пустые страницы.
+ */
+export async function deleteClient(actor: Actor, clientId: string) {
+  assertTrainer(actor);
+  await assertClientAccess(prisma, actor, clientId);
+  const client = await prisma.clientProfile.findUniqueOrThrow({
+    where: { id: clientId },
+    select: { userId: true, user: { select: { name: true } }, sessions: { select: { id: true } }, photos: { select: { storageKey: true, thumbKey: true } } },
+  });
+  const urls = [`/trainer/clients/${clientId}`, ...client.sessions.map((s) => `/trainer/sessions/${s.id}`)];
+  await prisma.$transaction([
+    prisma.notification.deleteMany({ where: { userId: actor.userId, url: { in: urls } } }),
+    // ClientProfile и всё, что к нему привязано, удаляются каскадом
+    prisma.user.delete({ where: { id: client.userId } }),
+  ]);
+  const storage = getStorage();
+  await Promise.allSettled(client.photos.flatMap((p) => [storage.delete(p.storageKey), storage.delete(p.thumbKey)]));
+  return client.user.name;
 }
 
 export async function addClientNote(actor: Actor, clientId: string, input: unknown) {

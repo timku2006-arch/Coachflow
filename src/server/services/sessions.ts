@@ -3,8 +3,8 @@ import { prisma } from "../db";
 import type { Actor } from "../actor";
 import { assertClientAccess, assertTrainer } from "../access";
 import { AppError, notFound } from "../errors";
-import { createSessionSchema, sessionResultsSchema, sessionTimeSchema, optionalText } from "@/lib/validation";
-import { SESSION_DURATION_MIN, addMinutes, addMoscowDays, formatDateTime, moscowLocalToDate } from "@/lib/time";
+import { createSessionSchema, resultsDraftSchema, sessionResultsSchema, sessionTimeSchema, optionalText } from "@/lib/validation";
+import { addMinutes, addMoscowDays, formatDateTime, moscowLocalToDate } from "@/lib/time";
 import { CLIENT_CHANGE_WINDOW_HOURS, clientCanChangeSession } from "@/lib/booking-rules";
 import { canEnterResults, sessionPhase } from "@/lib/session-phase";
 import { assertOwnExercises } from "./exercises";
@@ -90,10 +90,14 @@ function reminderFlags(startsAt: Date, now: Date) {
   };
 }
 
+const sessionMinutes = (s: { startsAt: Date; endsAt: Date }) => Math.round((s.endsAt.getTime() - s.startsAt.getTime()) / 60_000);
+
 // ---------------------------------------------------------------- создание
 export async function createSession(actor: Actor, input: unknown, now: Date = new Date()) {
   const data = createSessionSchema.parse(input);
   let clientId: string;
+  // Длительность выбирает тренер; клиенту она подставляется из его профиля.
+  if (actor.role === "CLIENT" && data.durationMin) throw new AppError("FORBIDDEN", "Длительность занятия задаёт тренер");
   if (actor.role === "TRAINER") {
     if (!data.clientId) throw new AppError("VALIDATION", "Выберите клиента");
     await assertClientAccess(prisma, actor, data.clientId);
@@ -103,7 +107,10 @@ export async function createSession(actor: Actor, input: unknown, now: Date = ne
     clientId = actor.clientId;
   }
   const startsAt = moscowLocalToDate(data.date, data.time);
-  const endsAt = addMinutes(startsAt, SESSION_DURATION_MIN);
+  const duration =
+    data.durationMin ??
+    (await prisma.clientProfile.findUniqueOrThrow({ where: { id: clientId }, select: { sessionDurationMin: true } })).sessionDurationMin;
+  const endsAt = addMinutes(startsAt, duration);
   validateNewTime(actor, startsAt, now);
 
   const created = await withOverlapGuard(() =>
@@ -135,8 +142,10 @@ export async function rescheduleSession(actor: Actor, sessionId: string, input: 
     throw new AppError("TOO_LATE", TOO_LATE_MESSAGE);
   }
   const data = sessionTimeSchema.parse(input);
+  if (actor.role === "CLIENT" && data.durationMin) throw new AppError("FORBIDDEN", "Длительность занятия задаёт тренер");
   const startsAt = moscowLocalToDate(data.date, data.time);
-  const endsAt = addMinutes(startsAt, SESSION_DURATION_MIN);
+  // При переносе длительность сохраняется, если тренер не выбрал другую
+  const endsAt = addMinutes(startsAt, data.durationMin ?? sessionMinutes(s));
   validateNewTime(actor, startsAt, now);
 
   const updated = await withOverlapGuard(() =>
@@ -244,7 +253,7 @@ export async function saveSessionResults(actor: Actor, sessionId: string, input:
   if (!canEnterResults(s, now)) {
     throw new AppError(
       "CONFLICT",
-      s.status === "CANCELLED" ? "Занятие отменено" : "Результаты можно внести после начала занятия",
+      s.status === "CANCELLED" ? "Занятие отменено" : "Результаты можно вносить за 15 минут до начала и позже",
     );
   }
   const data = sessionResultsSchema.parse(input);
@@ -261,10 +270,27 @@ export async function saveSessionResults(actor: Actor, sessionId: string, input:
   await prisma.$transaction([
     prisma.sessionResult.deleteMany({ where: { sessionId: s.id } }),
     prisma.sessionResult.createMany({ data: rows }),
-    prisma.session.update({ where: { id: s.id }, data: { status: "COMPLETED", notes: data.notes } }),
+    prisma.session.update({ where: { id: s.id }, data: { status: "COMPLETED", notes: data.notes, resultsDraft: Prisma.DbNull } }),
   ]);
   if (rows.length > 0) await onResultsSaved(s, s.status !== "COMPLETED", rows);
   return afterSessionCompleted(s.id);
+}
+
+/**
+ * Черновик результатов во время тренировки. Сохраняется как есть (поля могут быть пустыми),
+ * ничего не завершает и никого не уведомляет. Более старая версия не затирает более новую.
+ */
+export async function saveResultsDraft(actor: Actor, sessionId: string, input: unknown, now: Date = new Date()) {
+  assertTrainer(actor);
+  const s = await loadSession(actor, sessionId);
+  if (s.status !== "SCHEDULED") throw new AppError("CONFLICT", "Тренировка уже завершена");
+  if (!canEnterResults(s, now)) throw new AppError("CONFLICT", "Тренировка ещё не началась");
+  const draft = resultsDraftSchema.parse(input);
+  await assertOwnExercises(actor.trainerId, [...new Set(draft.sets.map((x) => x.exerciseId))]);
+  const prev = resultsDraftSchema.safeParse(s.resultsDraft);
+  if (prev.success && prev.data.savedAt > draft.savedAt) return prev.data;
+  await prisma.session.update({ where: { id: s.id }, data: { resultsDraft: draft } });
+  return draft;
 }
 
 /** Заметка тренера к тренировке (можно и до занятия — как план). */
