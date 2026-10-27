@@ -87,6 +87,7 @@ const fmt = (d: Date, pattern: string) => format(toMoscow(d), pattern, { locale:
 
 export const formatDate = (d: Date) => fmt(d, "d MMMM yyyy");
 export const formatDateShort = (d: Date) => fmt(d, "d MMM");
+export const formatDayMonth = (d: Date) => fmt(d, "d MMMM");
 export const formatTime = (d: Date) => fmt(d, "HH:mm");
 export const formatDateTime = (d: Date) => fmt(d, "d MMMM, EEEEEE, HH:mm");
 export const formatWeekday = (d: Date) => fmt(d, "EEEEEE, d MMM");

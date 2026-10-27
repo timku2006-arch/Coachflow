@@ -93,39 +93,46 @@ export default async function TrainerHome({ searchParams }: { searchParams: Prom
         </Link>
       )}
 
-      <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
-        <Card title="Твоя неделя" className="md:row-span-2">
-          <Gauge value={weekDone} max={Math.max(weekPlanned, 1)} label="тренировок проведено" sub={weekPlanned ? `осталось ${weekPlanned - weekDone}` : "на этой неделе пока пусто"} />
-          <div className="mt-5">
-            <WeekPulse days={pulse} />
-          </div>
-          <div className="mt-4 flex gap-4 text-[12px] text-muted">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-mint" />
-              проведено
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-lilac/60" />
-              запланировано
-            </span>
-          </div>
-        </Card>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/trainer/clients" className="press">
-            <Stat label="Клиенты" value={<Digits value={clientsCount} />} color="blue" />
-          </Link>
-          <a href="#results" className="press">
-            <Stat label="Без итогов" value={<Digits value={awaiting.length} />} color={awaiting.length ? "red" : "green"} />
-          </a>
+      {/* На широком экране — две независимые колонки, чтобы короткие блоки не оставляли дыр */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:items-start">
+        <div className="stagger space-y-5">
+          <Card title="Ваша неделя">
+            <Gauge value={weekDone} max={Math.max(weekPlanned, 1)} label="тренировок проведено" sub={weekPlanned ? `осталось ${weekPlanned - weekDone}` : "на этой неделе пока пусто"} />
+            <div className="mt-5">
+              <WeekPulse days={pulse} />
+            </div>
+            <div className="mt-4 flex gap-4 text-[12px] text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-mint" />
+                проведено
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-lilac/60" />
+                запланировано
+              </span>
+            </div>
+          </Card>
+          <Card title="Внесите итоги" className="hidden md:block">
+            <SessionList sessions={awaiting} href={(id) => `/trainer/sessions/${id}`} empty="Все результаты внесены" showClient />
+          </Card>
         </div>
 
-        <Card title="Сегодня">
-          <SessionList sessions={today} href={(id) => `/trainer/sessions/${id}`} empty="Сегодня занятий нет" showClient />
-        </Card>
-        <Card title="Внесите итоги" id="results">
-          <SessionList sessions={awaiting} href={(id) => `/trainer/sessions/${id}`} empty="Все результаты внесены" showClient />
-        </Card>
+        <div className="stagger space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/trainer/clients" className="press">
+              <Stat label="Клиенты" value={<Digits value={clientsCount} />} color="blue" />
+            </Link>
+            <a href="#results" className="press">
+              <Stat label="Без итогов" value={<Digits value={awaiting.length} />} color={awaiting.length ? "red" : "green"} />
+            </a>
+          </div>
+          <Card title="Сегодня">
+            <SessionList sessions={today} href={(id) => `/trainer/sessions/${id}`} empty="Сегодня занятий нет" showClient />
+          </Card>
+          <Card title="Внесите итоги" id="results" className="md:hidden">
+            <SessionList sessions={awaiting} href={(id) => `/trainer/sessions/${id}`} empty="Все результаты внесены" showClient />
+          </Card>
+        </div>
       </div>
     </>
   );

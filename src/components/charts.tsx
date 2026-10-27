@@ -27,7 +27,16 @@ function Chart({ data, dataKey, label, color = "#3ef2c5", unit = "кг", height 
           </defs>
           <CartesianGrid stroke="#232a3a" strokeDasharray="2 4" vertical={false} />
           <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11, fill: "#8a93a8" }} tickLine={false} axisLine={false} minTickGap={24} />
-          <YAxis domain={[Math.floor(min - pad), Math.ceil(max + pad)]} tick={{ fontSize: 11, fill: "#8a93a8" }} tickLine={false} axisLine={false} width={44} />
+          <YAxis
+            domain={[Math.floor(min - pad), Math.ceil(max + pad)]}
+            allowDecimals={false}
+            tickCount={4}
+            tickFormatter={(v: number) => v.toLocaleString("ru-RU")}
+            tick={{ fontSize: 11, fill: "#8a93a8" }}
+            tickLine={false}
+            axisLine={false}
+            width={44}
+          />
           <Tooltip
             cursor={{ stroke: "#ffffff", strokeOpacity: 0.25, strokeWidth: 1 }}
             labelFormatter={(v) => shortDate(String(v))}

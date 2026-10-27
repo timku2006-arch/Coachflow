@@ -101,7 +101,7 @@ async function BodyTab({ actor, clientId }: { actor: Actor; clientId: string }) 
       {(rows.length > 0 || weights.length > 0) && (
         <Card title="История замеров" className="lg:col-span-2">
           <details>
-            <summary className="cursor-pointer text-[16px] font-semibold text-mint">Показать все записи</summary>
+            <summary className="disclosure cursor-pointer text-[16px] font-semibold text-mint">Показать все записи</summary>
             <ul className="mt-3 divide-y divide-line/60 text-[15px]">
               {rows.map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-3 py-2.5">

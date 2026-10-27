@@ -62,7 +62,7 @@ export async function MembershipManager({ actor, clientId }: { actor: Actor; cli
 
             {m.entries.length > 0 && (
               <details className="mt-4">
-                <summary className="cursor-pointer text-[15px] font-semibold text-mint">История ({m.entries.length})</summary>
+                <summary className="disclosure cursor-pointer text-[15px] font-semibold text-mint">История ({m.entries.length})</summary>
                 <ul className="mt-2 divide-y divide-line/60 text-[14px]">
                   {m.entries.map((e) => (
                     <li key={e.id} className="flex justify-between gap-3 py-2">

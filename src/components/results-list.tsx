@@ -16,6 +16,12 @@ export function groupResults(rows: Row[]) {
 
 export const fmtKg = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
 
+/** Коротко для истории: «37,5 × 12, 12, 11» при одном весе, иначе «60×10, 65×8». */
+export function compactSets(sets: { weightKg: number; reps: number }[]) {
+  const same = sets.every((s) => s.weightKg === sets[0].weightKg);
+  return same ? `${fmtKg(sets[0].weightKg)} × ${sets.map((s) => s.reps).join(", ")}` : sets.map((s) => `${fmtKg(s.weightKg)}×${s.reps}`).join(", ");
+}
+
 export function ResultsList({ results, compact }: { results: Row[]; compact?: boolean }) {
   if (results.length === 0) return <Empty icon={<Dumbbell size={26} strokeWidth={1.6} />}>Результаты ещё не внесены</Empty>;
   const groups = groupResults(results);
@@ -23,9 +29,9 @@ export function ResultsList({ results, compact }: { results: Row[]; compact?: bo
     return (
       <ul className="space-y-1 text-sm">
         {groups.map((g) => (
-          <li key={g.name} className="flex gap-2">
-            <span className="shrink-0 text-ink-2">{g.name}</span>
-            <span className="truncate font-display font-semibold text-mint">{g.sets.map((s) => `${fmtKg(s.weightKg)}×${s.reps}`).join("  ")}</span>
+          <li key={g.name} className="flex items-baseline justify-between gap-3">
+            <span className="min-w-0 truncate text-ink-2">{g.name}</span>
+            <span className="shrink-0 font-display font-semibold text-mint">{compactSets(g.sets)}</span>
           </li>
         ))}
       </ul>

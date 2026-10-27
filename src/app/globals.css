@@ -224,3 +224,28 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   0% { transform: translateY(0) rotate(0); opacity: 1; }
   100% { transform: translateY(220px) rotate(540deg); opacity: 0; }
 }
+
+/* Раскрывающийся блок: аккуратная стрелка вместо системного треугольника */
+.disclosure {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+}
+.disclosure::-webkit-details-marker {
+  display: none;
+}
+.disclosure::after {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: -0.2rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.3s var(--ease-smooth), margin 0.3s var(--ease-smooth);
+}
+details[open] > .disclosure::after {
+  margin-top: 0.2rem;
+  transform: rotate(-135deg);
+}

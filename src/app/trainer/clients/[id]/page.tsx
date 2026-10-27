@@ -19,6 +19,7 @@ import { buildSummary } from "@/server/services/summary";
 import { listAchievements } from "@/server/services/achievements";
 import { listRecords } from "@/server/services/records";
 import { BookingForm } from "@/components/booking-form";
+import { TabStrip } from "@/components/tab-strip";
 import { addClientNoteAction, deleteClientAction, deleteClientNoteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
 
 const TABS = [
@@ -44,12 +45,13 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
       {sp.created && (
         <Notice>Клиент создан. Передайте ему email и временный пароль — при первом входе он задаст свой.</Notice>
       )}
-      <nav className="-mx-4 mb-5 overflow-x-auto px-4 [scrollbar-width:none]">
+      <TabStrip label="Разделы карточки клиента">
         <ul className="inline-flex rounded-full bg-surface p-1">
           {TABS.map(([k, label]) => (
             <li key={k}>
               <Link
                 href={`/trainer/clients/${id}?tab=${k}`}
+                aria-current={tab === k ? "page" : undefined}
                 className={clsx(
                   "press block whitespace-nowrap rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors duration-300",
                   tab === k ? "bg-subtle-2 text-ink" : "text-muted hover:text-ink",
@@ -60,7 +62,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
             </li>
           ))}
         </ul>
-      </nav>
+      </TabStrip>
 
       {tab === "overview" && <OverviewExtras />}
       {tab === "membership" && <MembershipManager actor={actor} clientId={id} />}

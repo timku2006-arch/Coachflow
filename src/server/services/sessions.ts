@@ -232,7 +232,7 @@ export async function listHistory(actor: Actor, clientId: string, now: Date = ne
   return prisma.session.findMany({
     where: { clientId, status: { not: "CANCELLED" }, startsAt: { lte: now } },
     orderBy: { startsAt: "desc" },
-    include: { results: { include: { exercise: true }, orderBy: { setNumber: "asc" } } },
+    include: { results: { include: { exercise: true }, orderBy: [{ setNumber: "asc" }, { id: "asc" }] } },
   });
 }
 

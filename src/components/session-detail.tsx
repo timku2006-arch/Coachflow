@@ -6,12 +6,12 @@ import { getSession } from "@/server/services/sessions";
 import { listExercises } from "@/server/services/exercises";
 import { getActiveProgram } from "@/server/services/programs";
 import { telegramLink } from "@/lib/booking-rules";
-import { formatDate, formatDateTime, formatTime, moscowDateString, moscowTimeString, relativeDayLabel } from "@/lib/time";
+import { formatDateTime, formatDayMonth, formatLongDate, formatTime, moscowDateString, moscowTimeString, relativeDayLabel } from "@/lib/time";
 import { attendanceOf, canEnterResults } from "@/lib/session-phase";
 import { Avatar, Card, Notice, PhaseBadge } from "./ui";
 import { Countdown } from "./countdown";
 import { FlowWaves } from "./flow-waves";
-import { ResultsList } from "./results-list";
+import { ResultsList, groupResults } from "./results-list";
 import { SessionActions } from "./session-actions";
 import { ResultsEditor, type EditorSet } from "./results-editor";
 import { ActionForm, SubmitButton } from "./form";
@@ -21,6 +21,12 @@ import { resultsDraftSchema } from "@/lib/validation";
 import { markMissedAction } from "@/app/actions/coaching";
 import { AttendanceBadge, AttendancePrompt } from "./attendance";
 import { RecordBanner } from "./record-banner";
+
+/** «Сегодня, 27 октября» для ближайших дней, иначе «вторник, 20 октября». */
+function dayHeading(d: Date) {
+  const rel = relativeDayLabel(d);
+  return ["Сегодня", "Завтра", "Вчера"].includes(rel) ? `${rel}, ${formatDayMonth(d)}` : formatLongDate(d);
+}
 
 /** Карточка записи: расписание и результаты в одной цепочке. */
 export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor; sessionId: string; flash?: string }) {
@@ -34,14 +40,17 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
   let editor: React.ReactNode = null;
   if (isTrainer && resultsAllowed) {
     const exercises = await listExercises(actor);
-    let initialSets: EditorSet[] = s.results.map((r) => ({ exerciseId: r.exerciseId, weightKg: String(r.weightKg), reps: String(r.reps) }));
+    // подходы одного упражнения — подряд, как их вводил тренер
+    let initialSets: EditorSet[] = groupResults(s.results).flatMap((g) =>
+      g.sets.map((r) => ({ exerciseId: r.exercise.id, weightKg: String(r.weightKg).replace(".", ","), reps: String(r.reps) })),
+    );
     if (initialSets.length === 0) {
       // Заготовка из текущей программы клиента — тренеру остаётся поправить цифры.
       const program = await getActiveProgram(actor, s.clientId);
       initialSets = (program?.exercises ?? []).flatMap((pe) =>
         Array.from({ length: pe.sets }, () => ({
           exerciseId: pe.exerciseId,
-          weightKg: pe.weightKg != null ? String(pe.weightKg) : "",
+          weightKg: pe.weightKg != null ? String(pe.weightKg).replace(".", ",") : "",
           reps: String(parseInt(pe.reps, 10) || ""),
         })),
       );
@@ -73,9 +82,9 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
           {isTrainer && <Avatar name={s.client.user.name} size="lg" />}
           <div className="min-w-0">
             <div className="text-[15px] font-semibold text-muted first-letter:uppercase">
-              {relativeDayLabel(s.startsAt)}, {formatDate(s.startsAt)}
+              {dayHeading(s.startsAt)}
             </div>
-            <h1 className="truncate font-display text-[1.6rem] font-semibold leading-tight">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
+            <h1 className="line-clamp-2 break-words font-display text-[1.6rem] font-semibold leading-tight">{isTrainer ? s.client.user.name : "Тренировка"}</h1>
             <div className="flex flex-wrap items-center gap-2">
               <PhaseBadge phase={s.phase} />
               {isTrainer && <AttendanceBadge value={attendanceOf(s)} />}

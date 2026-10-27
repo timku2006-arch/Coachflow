@@ -147,10 +147,10 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
           )}
         </Card>
 
-        <Card title="Твоя неделя">
+        <Card title="Ваша неделя">
           <WeekPulse days={pulse} height={96} />
           <div className="mt-5 border-t border-white/[0.06] pt-4">
-            <Gauge value={monthDone} max={Math.max(monthTotal, 1)} label="тренировок в этом месяце" size={190} />
+            <Gauge value={monthDone} max={Math.max(monthTotal, 1)} label="тренировок за месяц" size={190} />
           </div>
         </Card>
 

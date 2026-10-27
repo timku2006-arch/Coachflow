@@ -163,7 +163,14 @@ export function ResultsEditor({
       }}
     >
       {/* Полностью пустые подходы при завершении пропускаем */}
-      <input type="hidden" name="results" value={JSON.stringify({ notes, sets: sets.filter((x) => x.weightKg !== "" || x.reps !== "") })} />
+      <input
+        type="hidden"
+        name="results"
+        value={JSON.stringify({
+          notes,
+          sets: sets.filter((x) => x.weightKg !== "" || x.reps !== "").map((x) => ({ ...x, weightKg: x.weightKg.replace(",", ".") })),
+        })}
+      />
       {live && <SaveStatus state={save.state} at={save.at} />}
       {sets.length === 0 && <p className="text-sm text-muted">Добавьте упражнения, выполненные на тренировке.</p>}
       <ul className="space-y-2">
@@ -179,7 +186,7 @@ export function ResultsEditor({
                   inputMode="decimal"
                   placeholder="кг"
                   value={s.weightKg}
-                  onChange={(e) => update(i, { weightKg: e.target.value.replace(",", ".") })}
+                  onChange={(e) => update(i, { weightKg: e.target.value.replace(".", ",") })}
                   className={`w-20 ${num}`}
                   required={!live}
                 />
