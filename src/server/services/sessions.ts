@@ -12,6 +12,7 @@ import { onResultsSaved, onSessionBooked, onSessionCancelled, onSessionReschedul
 import { REMINDER_DAY_MS, REMINDER_SOON_MS } from "./reminders";
 import { afterSessionCompleted } from "./session-hooks";
 import { notify } from "./notifications";
+import { assertDayOpen } from "./days-off";
 import { z } from "zod";
 
 const MAX_RANGE_DAYS = 366;
@@ -112,6 +113,7 @@ export async function createSession(actor: Actor, input: unknown, now: Date = ne
     (await prisma.clientProfile.findUniqueOrThrow({ where: { id: clientId }, select: { sessionDurationMin: true } })).sessionDurationMin;
   const endsAt = addMinutes(startsAt, duration);
   validateNewTime(actor, startsAt, now);
+  await assertDayOpen(actor, startsAt);
 
   const created = await withOverlapGuard(() =>
     prisma.$transaction(async (tx) => {
@@ -147,6 +149,7 @@ export async function rescheduleSession(actor: Actor, sessionId: string, input: 
   // При переносе длительность сохраняется, если тренер не выбрал другую
   const endsAt = addMinutes(startsAt, data.durationMin ?? sessionMinutes(s));
   validateNewTime(actor, startsAt, now);
+  await assertDayOpen(actor, startsAt);
 
   const updated = await withOverlapGuard(() =>
     prisma.$transaction(async (tx) => {

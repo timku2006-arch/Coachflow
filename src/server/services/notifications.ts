@@ -14,6 +14,7 @@ export type NotificationType =
   | "achievement"
   | "membership"
   | "attendance"
+  | "feedback"
   | "test";
 
 export type NotifyInput = {

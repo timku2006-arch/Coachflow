@@ -156,6 +156,11 @@ async function main() {
   for (let w = 0; w < 6; w++) {
     const daysAgo = 42 - w * 7;
     const a = await session(anna.id, at(-daysAgo, "10:00"), { status: "COMPLETED", notes: w === 5 ? "Отличная тренировка, добавляем вес в мосте." : undefined });
+    // самочувствие после тренировки: в основном «отлично», однажды «тяжело» с комментарием
+    await prisma.session.update({
+      where: { id: a.id },
+      data: w === 3 ? { feedbackMood: 1, feedbackNote: "Ныло колено после выпадов", feedbackAt: a.endsAt } : { feedbackMood: w % 2 ? 2 : 3, feedbackAt: a.endsAt },
+    });
     await prisma.sessionResult.createMany({
       data: [
         ...sets(a.id, ex["Приседания со штангой"], 25 + w * 2.5, [12, 12, 11]),

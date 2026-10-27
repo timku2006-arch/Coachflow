@@ -13,11 +13,14 @@ export function BookingForm({
   defaultClientId,
   defaultDate,
   durationMin = SESSION_DURATION_MIN,
+  note,
 }: {
   clients?: { id: string; name: string; durationMin?: number }[];
   defaultClientId?: string;
   defaultDate?: string;
   durationMin?: number;
+  /** Подсказка клиенту, например о выходных тренера. */
+  note?: string;
 }) {
   const single = clients?.length === 1 ? clients[0] : undefined;
   return (
@@ -58,6 +61,7 @@ export function BookingForm({
       ) : (
         <p className="text-xs text-muted">
           Длительность — {durationMin} минут. Запись возможна не позднее чем за {CLIENT_CHANGE_WINDOW_HOURS} часа до начала.
+          {note && ` ${note}`}
         </p>
       )}
       <SubmitButton className="w-full sm:w-auto">Записать</SubmitButton>

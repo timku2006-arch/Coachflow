@@ -20,7 +20,8 @@ export async function listClients(actor: TrainerActor) {
   return prisma.clientProfile.findMany({
     where: { trainerId: actor.trainerId },
     include: {
-      user: { select: { name: true, email: true } },
+      // _count.pushSubscriptions — включены ли у клиента уведомления
+      user: { select: { name: true, email: true, _count: { select: { pushSubscriptions: true } } } },
       sessions: {
         where: { status: "SCHEDULED", startsAt: { gte: new Date() } },
         orderBy: { startsAt: "asc" },

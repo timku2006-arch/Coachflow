@@ -8,7 +8,7 @@ import { getActiveProgram } from "@/server/services/programs";
 import { telegramLink } from "@/lib/booking-rules";
 import { formatDateTime, formatDayMonth, formatLongDate, formatTime, moscowDateString, moscowTimeString, relativeDayLabel } from "@/lib/time";
 import { attendanceOf, canEnterResults } from "@/lib/session-phase";
-import { Avatar, Card, Notice, PhaseBadge } from "./ui";
+import { Avatar, Card, MoreLink, Notice, PhaseBadge } from "./ui";
 import { Countdown } from "./countdown";
 import { FlowWaves } from "./flow-waves";
 import { ResultsList, groupResults } from "./results-list";
@@ -21,6 +21,7 @@ import { resultsDraftSchema } from "@/lib/validation";
 import { markMissedAction } from "@/app/actions/coaching";
 import { AttendanceBadge, AttendancePrompt } from "./attendance";
 import { RecordBanner } from "./record-banner";
+import { FeedbackPrompt, FeedbackView } from "./feedback";
 
 /** «Сегодня, 27 октября» для ближайших дней, иначе «вторник, 20 октября». */
 function dayHeading(d: Date) {
@@ -113,6 +114,12 @@ export async function SessionDetail({ actor, sessionId, flash }: { actor: Actor;
       {flash && <Notice>{flash}</Notice>}
       {records[0] && <RecordBanner record={records[0]} more={records.length - 1} moreSuffix=" в этой тренировке" />}
       {!isTrainer && s.status === "SCHEDULED" && s.phase === "upcoming" && !s.confirmedAt && <AttendancePrompt session={s} />}
+      {!isTrainer && s.status === "COMPLETED" && !s.feedbackMood && <FeedbackPrompt session={s} />}
+      {s.status === "COMPLETED" && s.feedbackMood && (
+        <Card title={isTrainer ? "Самочувствие клиента" : "Ваше самочувствие"} action={!isTrainer && <MoreLink href={`/client/sessions/${s.id}/feedback`}>Изменить</MoreLink>}>
+          <FeedbackView mood={s.feedbackMood} note={s.feedbackNote} />
+        </Card>
+      )}
 
       {s.status === "SCHEDULED" && s.phase === "upcoming" && (
         <Card title="Запись">

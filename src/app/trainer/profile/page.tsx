@@ -4,6 +4,7 @@ import { telegramLink } from "@/lib/booking-rules";
 import { ActionForm, SubmitButton } from "@/components/form";
 import { Card, Field, Input, Notice, PageHeader } from "@/components/ui";
 import { updateTrainerProfileAction } from "@/app/actions/trainer";
+import { WeeklyDaysOffForm } from "@/components/time-off";
 
 export const metadata = { title: "Профиль" };
 
@@ -34,6 +35,12 @@ export default async function TrainerProfilePage({ searchParams }: { searchParam
         </ActionForm>
         <Link href="/change-password" className="mt-4 inline-block text-sm text-muted hover:underline">
           Сменить пароль
+        </Link>
+      </Card>
+      <Card title="Выходные" className="mt-5 max-w-lg">
+        <WeeklyDaysOffForm days={user.trainerProfile?.weeklyDaysOff ?? [7]} />
+        <Link href="/trainer/schedule#time-off" className="mt-4 inline-block text-[15px] font-semibold text-mint">
+          Больничный или отпуск →
         </Link>
       </Card>
     </>

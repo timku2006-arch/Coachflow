@@ -25,6 +25,8 @@ import { currentMembership } from "@/server/services/memberships";
 import { buildSummary } from "@/server/services/summary";
 import { evaluateAchievements, listAchievements } from "@/server/services/achievements";
 import { AttendancePrompt } from "@/components/attendance";
+import { FeedbackPrompt } from "@/components/feedback";
+import { pendingFeedback } from "@/server/services/feedback";
 import { MembershipCard } from "@/components/membership-card";
 import { SummaryCard } from "@/components/summary-card";
 import { RecordBanner } from "@/components/record-banner";
@@ -59,6 +61,8 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
   const weekAgo = addMoscowDays(now, -7);
   const freshRecords = records.filter((r) => r.achievedAt >= weekAgo);
   const askAttendance = upcoming.find((s) => !s.confirmedAt && s.startsAt > now && s.startsAt.getTime() - now.getTime() <= 48 * 3_600_000);
+  // Одно действие за раз: сначала «Придёте?», потом «Как самочувствие?»
+  const askFeedback = askAttendance ? null : await pendingFeedback(actor.clientId, now);
   const earned = badges.filter((b) => b.earnedAt).sort((a, b) => b.earnedAt!.getTime() - a.earnedAt!.getTime());
   const pulse = buildWeekPulse(weekStart, week, now);
   const next = upcoming[0];
@@ -81,6 +85,7 @@ export default async function ClientHome({ searchParams }: { searchParams: Promi
       />
       {/* Главное действие — первым и крупно */}
       {askAttendance && <AttendancePrompt session={askAttendance} />}
+      {askFeedback && <FeedbackPrompt session={askFeedback} />}
       {freshRecords[0] && <RecordBanner record={freshRecords[0]} more={freshRecords.length - 1} />}
       <MembershipCard membership={membership} now={now} />
       <PushPrompt publicKey={publicKey} />

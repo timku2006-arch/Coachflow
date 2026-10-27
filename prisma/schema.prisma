@@ -43,8 +43,11 @@ model TrainerProfile {
   userId           String  @unique
   user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   telegramUsername String?
+  // Постоянные выходные: дни недели 1 (пн) … 7 (вс)
+  weeklyDaysOff    Int[]   @default([7])
 
   clients   ClientProfile[]
+  timeOff   TimeOff[]
   exercises Exercise[]
   sessions  Session[]
 }
@@ -160,6 +163,11 @@ model Session {
   reminderSoonSentAt  DateTime? @db.Timestamptz(3)
   // Клиент подтвердил, что придёт («Приду»). Сбрасывается при переносе.
   confirmedAt DateTime? @db.Timestamptz(3)
+  // Самочувствие после тренировки: 1 — тяжело, 2 — нормально, 3 — отлично
+  feedbackAskedAt DateTime? @db.Timestamptz(3)
+  feedbackMood    Int?
+  feedbackNote    String?
+  feedbackAt      DateTime? @db.Timestamptz(3)
   // Черновик результатов, который тренер заполняет во время тренировки (до «Завершить»)
   resultsDraft Json?
   createdAt   DateTime       @default(now()) @db.Timestamptz(3)
@@ -332,4 +340,17 @@ model MembershipEntry {
   createdAt    DateTime   @default(now()) @db.Timestamptz(3)
 
   @@index([membershipId, createdAt])
+}
+
+// Нерабочие дни тренера (больничный, отпуск): записи на эти даты закрыты
+model TimeOff {
+  id        String         @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  startsOn  DateTime       @db.Date
+  endsOn    DateTime       @db.Date
+  reason    String         // sick | vacation | other
+  createdAt DateTime       @default(now()) @db.Timestamptz(3)
+
+  @@index([trainerId, endsOn])
 }

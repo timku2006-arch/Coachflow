@@ -4,6 +4,7 @@ import { listClients } from "@/server/services/clients";
 import { formatDateTime } from "@/lib/time";
 import { Avatar, Card, Empty, LinkButton, Notice, PageHeader } from "@/components/ui";
 import { ChevronRight, UserPlus, Users } from "lucide-react";
+import { PushStatus } from "@/components/push-status";
 
 export const metadata = { title: "Клиенты" };
 
@@ -31,6 +32,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[17px] font-semibold">{c.user.name}</span>
                     <span className="block truncate text-[14px] text-muted">{c.goal ?? c.user.email}</span>
+                    <PushStatus on={c.user._count.pushSubscriptions > 0} />
                   </span>
                   <span className="hidden text-right text-xs text-muted sm:block">
                     {c.sessions[0] ? <>Следующее:<br />{formatDateTime(c.sessions[0].startsAt)}</> : "Нет записей"}

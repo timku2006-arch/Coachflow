@@ -3,6 +3,7 @@ import type { listHistory } from "@/server/services/sessions";
 import { formatDate, formatTime } from "@/lib/time";
 import { Empty, ListRow } from "./ui";
 import { ResultsList } from "./results-list";
+import { FeedbackView } from "./feedback";
 
 export function HistoryList({ history, hrefBase }: { history: Awaited<ReturnType<typeof listHistory>>; hrefBase: string }) {
   if (history.length === 0) return <Empty icon={<History size={28} strokeWidth={1.6} />}>Прошедших тренировок пока нет</Empty>;
@@ -14,7 +15,10 @@ export function HistoryList({ history, hrefBase }: { history: Awaited<ReturnType
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-[17px] font-semibold first-letter:uppercase">{formatDate(s.startsAt)}</span>
-                <span className="font-display font-semibold text-muted">{formatTime(s.startsAt)}</span>
+                <span className="flex items-center gap-2">
+                  <FeedbackView mood={s.feedbackMood} note={null} compact />
+                  <span className="font-display font-semibold text-muted">{formatTime(s.startsAt)}</span>
+                </span>
               </div>
               <div className="mt-1.5">
                 {s.status === "COMPLETED" ? (

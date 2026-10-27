@@ -19,6 +19,9 @@ import { buildSummary } from "@/server/services/summary";
 import { listAchievements } from "@/server/services/achievements";
 import { listRecords } from "@/server/services/records";
 import { BookingForm } from "@/components/booking-form";
+import { PushStatus } from "@/components/push-status";
+import { FeedbackView } from "@/components/feedback";
+import { clientHasPush, listFeedback } from "@/server/services/feedback";
 import { TabStrip } from "@/components/tab-strip";
 import { addClientNoteAction, deleteClientAction, deleteClientNoteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
 
@@ -38,10 +41,20 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
   const sp = await searchParams;
   const tab: Tab = (TABS.find(([k]) => k === sp.tab)?.[0] ?? "overview") as Tab;
   const client = await orNotFound(getClient(actor, id));
+  const hasPush = await clientHasPush(actor, id);
 
   return (
     <>
-      <PageHeader eyebrow="Клиент" title={client.user.name} subtitle={client.user.email} action={<LinkButton href={`/trainer/schedule?client=${id}`} variant="secondary">+ Запись</LinkButton>} />
+      <PageHeader
+        eyebrow="Клиент"
+        title={client.user.name}
+        subtitle={
+          <>
+            {client.user.email}
+            <PushStatus on={hasPush} />
+          </>
+        }
+        action={<LinkButton href={`/trainer/schedule?client=${id}`} variant="secondary">+ Запись</LinkButton>} />
       {sp.created && (
         <Notice>Клиент создан. Передайте ему email и временный пароль — при первом входе он задаст свой.</Notice>
       )}
@@ -162,7 +175,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
 
   async function OverviewExtras() {
     const period = sp.summary === "month" ? "month" : "week";
-    const [summary, badges, records] = await Promise.all([buildSummary(actor, id, period), listAchievements(actor, id), listRecords(actor, id, 3)]);
+    const [summary, badges, records, feedback] = await Promise.all([buildSummary(actor, id, period), listAchievements(actor, id), listRecords(actor, id, 3), listFeedback(actor, id)]);
     const earned = badges.filter((b) => b.earnedAt);
     return (
       <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -178,6 +191,20 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
             <p className="text-[15px] text-muted">Пока нет значков</p>
           )}
         </Card>
+        {feedback.length > 0 && (
+          <Card title="Самочувствие после тренировок" className="md:col-span-2">
+            <ul className="divide-y divide-line/60">
+              {feedback.map((f) => (
+                <li key={f.id}>
+                  <Link href={`/trainer/sessions/${f.id}`} className="press -mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-subtle/60">
+                    <span className="w-24 shrink-0 text-[14px] text-muted">{formatDate(f.startsAt).replace(/ \d{4}$/, "")}</span>
+                    <FeedbackView mood={f.feedbackMood} note={f.feedbackNote} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
         <section className="min-w-0 md:col-span-2">
           <h2 className="mb-2.5 px-1 text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">Последние рекорды</h2>
           <RecordsList records={records} />

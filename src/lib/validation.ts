@@ -154,6 +154,28 @@ export const resultsDraftSchema = z.object({
 });
 export type ResultsDraft = z.infer<typeof resultsDraftSchema>;
 
+// ---- Нерабочие дни
+export const weeklyDaysOffSchema = z
+  .array(z.coerce.number().int().min(1).max(7))
+  .max(6, "Хотя бы один день в неделе должен быть рабочим")
+  .transform((d) => [...new Set(d)].sort());
+
+export const timeOffSchema = z
+  .object({
+    startsOn: dateString,
+    endsOn: dateString,
+    reason: z.enum(["sick", "vacation", "other"], { errorMap: () => ({ message: "Выберите причину" }) }),
+  })
+  .refine((v) => v.endsOn >= v.startsOn, { message: "Дата окончания раньше даты начала", path: ["endsOn"] })
+  .refine((v) => Date.parse(v.endsOn) - Date.parse(v.startsOn) <= 92 * 86_400_000, { message: "Не больше 3 месяцев за раз", path: ["endsOn"] });
+
+// ---- Самочувствие после тренировки
+export const feedbackSchema = z.object({
+  mood: z.coerce.number().int().min(1, "Выберите самочувствие").max(3, "Выберите самочувствие"),
+  note: optionalText(500),
+});
+export const feedbackNoteSchema = z.object({ note: optionalText(500) });
+
 // ---- Замеры тела
 const cm = (label: string) =>
   z.preprocess(emptyToUndefined, num(label).min(20, `${label}: от 20 см`).max(300, `${label}: до 300 см`).optional()).transform((v) => v ?? null);

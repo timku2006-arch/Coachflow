@@ -34,6 +34,7 @@ export function WeekCalendar({
   sessionHref,
   navHref,
   showClient,
+  closed = {},
 }: {
   weekStart: Date;
   sessions: CalSession[];
@@ -41,6 +42,8 @@ export function WeekCalendar({
   sessionHref: (id: string) => string;
   navHref: (week: string) => string;
   showClient?: boolean;
+  /** Нерабочие дни недели: дата YYYY-MM-DD → «Выходной», «Больничный»… */
+  closed?: Record<string, string>;
 }) {
   const days = weekDays(weekStart);
   const today = moscowDateString(new Date());
@@ -88,7 +91,7 @@ export function WeekCalendar({
               <span
                 className={clsx(
                   "flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] font-semibold",
-                  key === today ? "bg-gradient-to-br from-mint to-lilac text-[#0a0d14] shadow-glow" : "text-ink",
+                  key === today ? "bg-gradient-to-br from-mint to-lilac text-[#0a0d14] shadow-glow" : closed[key] ? "text-faint" : "text-ink",
                 )}
               >
                 {format(z, "d")}
@@ -111,10 +114,14 @@ export function WeekCalendar({
             <section key={key} id={`d-${key}`} className={clsx("glass scroll-mt-20 rounded-3xl p-4", key < today && "opacity-60")}>
               <div className="mb-1 flex items-baseline justify-between">
                 <h3 className="text-[15px] font-semibold first-letter:uppercase">{format(z, "EEEE, d MMMM", { locale: ru })}</h3>
-                {key === today && <span className="text-[13px] font-semibold text-mint">Сегодня</span>}
+                {closed[key] ? (
+                  <span className="rounded-full bg-subtle px-2 py-0.5 text-[12px] font-semibold text-muted">{closed[key]}</span>
+                ) : (
+                  key === today && <span className="text-[13px] font-semibold text-mint">Сегодня</span>
+                )}
               </div>
               {items.length === 0 ? (
-                <p className="py-1 text-[15px] text-faint">Нет занятий</p>
+                <p className="py-1 text-[15px] text-faint">{closed[key] ? "Тренер не работает" : "Нет занятий"}</p>
               ) : (
                 <ul className="divide-y divide-line/60">
                   {items.map((it) =>
