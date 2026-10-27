@@ -63,6 +63,11 @@ export const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+/** Клиент по ссылке-приглашению придумывает пароль. */
+export const setPasswordSchema = z
+  .object({ password, confirmPassword: z.string() })
+  .refine((v) => v.password === v.confirmPassword, { message: "Пароли не совпадают", path: ["confirmPassword"] });
+
 // ---- Профили ----
 export const telegramUsername = z.preprocess(
   (v) => (typeof v === "string" ? v.trim().replace(/^@/, "").replace(/^https?:\/\/t\.me\//, "") : v),
@@ -89,7 +94,8 @@ export const clientProfileSchema = z.object({
 export const createClientSchema = z.object({
   name: requiredText(100, "Имя"),
   email,
-  password,
+  // без пароля клиент получает ссылку-приглашение и задаёт пароль сам
+  password: z.preprocess(emptyToUndefined, password.optional()),
   heightCm,
   goal: optionalText(500),
   sessionDurationMin: durationMin,
@@ -153,6 +159,13 @@ export const resultsDraftSchema = z.object({
   savedAt: z.number().int().positive(),
 });
 export type ResultsDraft = z.infer<typeof resultsDraftSchema>;
+
+// ---- Разовые тренировки
+export const sessionPriceSchema = z.object({
+  sessionPriceRub: z
+    .preprocess(emptyToUndefined, num("Цена").int("Цена: целое число рублей").min(0, "Цена не может быть отрицательной").max(1_000_000).optional())
+    .transform((v) => v ?? null),
+});
 
 // ---- Нерабочие дни
 export const weeklyDaysOffSchema = z

@@ -10,7 +10,7 @@ export default async function NewClientPage() {
   await requireTrainer();
   return (
     <>
-      <PageHeader title="Новый клиент" subtitle="Клиент войдёт по email и временному паролю, затем задаст свой." />
+      <PageHeader title="Новый клиент" subtitle="После создания появится ссылка — отправьте её клиенту, он сам придумает пароль." />
       <Card className="max-w-lg">
         <ActionForm action={createClientAction}>
           <Field label="Имя и фамилия">
@@ -19,9 +19,14 @@ export default async function NewClientPage() {
           <Field label="Email">
             <Input name="email" type="email" required />
           </Field>
-          <Field label="Временный пароль" hint="Минимум 8 символов. Передайте его клиенту.">
-            <Input name="password" type="text" required minLength={8} autoComplete="off" />
-          </Field>
+          <details className="rounded-2xl bg-subtle/60 px-4 py-3">
+            <summary className="disclosure cursor-pointer text-[14px] font-semibold text-muted">Задать временный пароль вместо ссылки</summary>
+            <div className="mt-3">
+              <Field label="Временный пароль" hint="Минимум 8 символов. Обычно не нужен: после создания появится ссылка, по которой клиент сам придумает пароль.">
+                <Input name="password" type="text" minLength={8} autoComplete="off" />
+              </Field>
+            </div>
+          </details>
           <Field label="Рост, см">
             <Input name="heightCm" type="number" min={100} max={250} inputMode="numeric" />
           </Field>

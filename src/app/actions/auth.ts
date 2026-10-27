@@ -7,6 +7,7 @@ import { AppError } from "@/server/errors";
 import { formObject, handle, type FormState } from "@/server/action";
 import { changePasswordSchema, loginSchema, registerTrainerSchema } from "@/lib/validation";
 import { homeFor } from "@/server/session-token";
+import { acceptInvite } from "@/server/services/invites";
 
 export async function loginAction(_: FormState, fd: FormData): Promise<FormState> {
   return handle(async () => {
@@ -42,6 +43,15 @@ export async function registerTrainerAction(_: FormState, fd: FormData): Promise
     );
     await startSession(user.id, "TRAINER");
     redirect("/trainer/profile?welcome=1");
+  });
+}
+
+/** Клиент открыл ссылку-приглашение и придумал пароль — сразу входим. */
+export async function acceptInviteAction(token: string, _: FormState, fd: FormData): Promise<FormState> {
+  return handle(async () => {
+    const user = await acceptInvite(token, formObject(fd));
+    await startSession(user.id, "CLIENT");
+    redirect("/client?hello=1");
   });
 }
 

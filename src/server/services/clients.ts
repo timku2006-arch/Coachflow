@@ -14,6 +14,8 @@ import {
 import { dateOnly } from "@/lib/time";
 import { onNutritionChanged } from "./events";
 import { getStorage } from "../storage";
+import { newInvite } from "./invites";
+import { randomBytes } from "node:crypto";
 
 export async function listClients(actor: TrainerActor) {
   assertTrainer(actor);
@@ -35,7 +37,9 @@ export async function listClients(actor: TrainerActor) {
 export async function createClient(actor: Actor, input: unknown) {
   assertTrainer(actor);
   const data = createClientSchema.parse(input);
-  const passwordHash = await bcrypt.hash(data.password, 10);
+  // Без пароля — приглашение: пароль-заглушку никто не знает, войти можно только по ссылке.
+  const invite = data.password ? null : newInvite();
+  const passwordHash = await bcrypt.hash(data.password ?? randomBytes(32).toString("hex"), 10);
   try {
     return await prisma.user.create({
       data: {
@@ -44,6 +48,7 @@ export async function createClient(actor: Actor, input: unknown) {
         passwordHash,
         role: "CLIENT",
         mustChangePassword: true,
+        ...(invite ?? {}),
         clientProfile: {
           create: { trainerId: actor.trainerId, heightCm: data.heightCm, goal: data.goal, sessionDurationMin: data.sessionDurationMin },
         },
@@ -64,7 +69,7 @@ export async function getClient(actor: Actor, clientId: string) {
   const client = await prisma.clientProfile.findUnique({
     where: { id: clientId },
     include: {
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true, email: true, inviteToken: true, inviteExpiresAt: true, mustChangePassword: true } },
       nutrition: true,
       bodyWeights: { orderBy: { date: "asc" } },
       notes: actor.role === "TRAINER" ? { orderBy: { createdAt: "desc" } } : false,

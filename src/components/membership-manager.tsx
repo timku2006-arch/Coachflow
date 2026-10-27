@@ -19,7 +19,7 @@ export async function MembershipManager({ actor, clientId }: { actor: Actor; cli
     <div className="stagger grid grid-cols-1 gap-5 lg:grid-cols-2">
       {list.length === 0 && (
         <Card title="Абонемент">
-          <p className="text-[17px] text-ink-2">У клиента пока нет абонемента.</p>
+          <p className="text-[17px] text-ink-2">У клиента пока нет абонемента — тренировки считаются разовыми.</p>
         </Card>
       )}
       {list.map((m, idx) => {

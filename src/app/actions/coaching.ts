@@ -11,6 +11,8 @@ import { adjustRemaining, createMembership, deleteMembership, markPaid } from "@
 import { saveFeedback, saveFeedbackNote } from "@/server/services/feedback";
 import { createTimeOff, deleteTimeOff, setWeeklyDaysOff } from "@/server/services/days-off";
 import { plural } from "@/lib/time";
+import { rub } from "@/lib/money";
+import { markSessionsPaid, setSessionPrice } from "@/server/services/payments";
 
 // Все проверки прав и правил — внутри сервисов.
 const refresh = () => revalidatePath("/", "layout");
@@ -140,5 +142,24 @@ export async function deleteTimeOffAction(id: string, _: FormState): Promise<For
     const { actor } = await requireTrainer();
     await deleteTimeOff(actor, id);
     refresh();
+  });
+}
+
+// ---- Оплата разовых тренировок
+export async function setSessionPriceAction(_: FormState, fd: FormData): Promise<FormState> {
+  return handle(async () => {
+    const { actor } = await requireTrainer();
+    await setSessionPrice(actor, formObject(fd));
+    refresh();
+    return "Цена сохранена";
+  });
+}
+
+export async function markSessionsPaidAction(clientId: string, _: FormState): Promise<FormState> {
+  return handle(async () => {
+    const { actor } = await requireTrainer();
+    const { count, total } = await markSessionsPaid(actor, clientId);
+    refresh();
+    return `Отмечено: ${plural(count, ["тренировка", "тренировки", "тренировок"])}${total !== null ? ` — ${rub(total)}` : ""}`;
   });
 }

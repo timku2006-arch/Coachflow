@@ -29,6 +29,9 @@ model User {
   name               String
   role               Role
   mustChangePassword Boolean  @default(false)
+  // Ссылка-приглашение: клиент сам задаёт пароль. Одноразовая, с ограниченным сроком.
+  inviteToken        String?   @unique
+  inviteExpiresAt    DateTime? @db.Timestamptz(3)
   createdAt          DateTime @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime @updatedAt @db.Timestamptz(3)
 
@@ -45,6 +48,8 @@ model TrainerProfile {
   telegramUsername String?
   // Постоянные выходные: дни недели 1 (пн) … 7 (вс)
   weeklyDaysOff    Int[]   @default([7])
+  // Цена разовой тренировки (без абонемента), ₽
+  sessionPriceRub  Int?
 
   clients   ClientProfile[]
   timeOff   TimeOff[]
@@ -168,6 +173,9 @@ model Session {
   feedbackMood    Int?
   feedbackNote    String?
   feedbackAt      DateTime? @db.Timestamptz(3)
+  // Оплата разовой тренировки (если занятие не списано с абонемента)
+  paidAt          DateTime? @db.Timestamptz(3)
+  paidRub         Int?
   // Черновик результатов, который тренер заполняет во время тренировки (до «Завершить»)
   resultsDraft Json?
   createdAt   DateTime       @default(now()) @db.Timestamptz(3)

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { startOfDay } from "date-fns";
-import { Dumbbell, Plus } from "lucide-react";
+import { ChevronRight, Dumbbell, Plus, Wallet } from "lucide-react";
 import { prisma } from "@/server/db";
 import { requireTrainer } from "@/server/auth";
 import { listAwaitingResults } from "@/server/services/sessions";
+import { listDebts } from "@/server/services/payments";
+import { rub } from "@/lib/money";
 import { vapidPublicKey } from "@/server/services/notifications";
 import { addMoscowDays, formatLongDate, formatTime, moscowWeekStart, plural, toMoscow } from "@/lib/time";
 import { isLive } from "@/lib/session-phase";
@@ -28,7 +30,7 @@ export default async function TrainerHome({ searchParams }: { searchParams: Prom
   const now = new Date();
   const dayStart = new Date(startOfDay(toMoscow(now)).getTime());
   const weekStart = moscowWeekStart(now);
-  const [today, awaiting, clientsCount, week, publicKey] = await Promise.all([
+  const [today, awaiting, clientsCount, week, publicKey, debts] = await Promise.all([
     prisma.session.findMany({
       where: { trainerId: actor.trainerId, startsAt: { gte: dayStart, lt: addMoscowDays(dayStart, 1) } },
       include: { client: { include: { user: { select: { name: true } } } } },
@@ -41,7 +43,9 @@ export default async function TrainerHome({ searchParams }: { searchParams: Prom
       select: { startsAt: true, status: true },
     }),
     vapidPublicKey(),
+    listDebts(actor),
   ]);
+  const debtTotal = debts.reduce((a, d) => a + (d.total ?? 0), 0);
   const pulse = buildWeekPulse(weekStart, week, now);
   const weekPlanned = pulse.reduce((a, d) => a + d.planned, 0);
   const weekDone = pulse.reduce((a, d) => a + d.done, 0);
@@ -126,6 +130,18 @@ export default async function TrainerHome({ searchParams }: { searchParams: Prom
               <Stat label="Без итогов" value={<Digits value={awaiting.length} />} color={awaiting.length ? "red" : "green"} />
             </a>
           </div>
+          <Link href="/trainer/payments" className="press glass flex items-center gap-3 rounded-3xl p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-coral/15 text-coral">
+              <Wallet size={22} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold">Оплаты</span>
+              <span className="block truncate text-[14px] text-muted">
+                {debts.length ? `Ждут оплаты: ${plural(debts.length, ["клиент", "клиента", "клиентов"])}${debtTotal ? ` · ${rub(debtTotal)}` : ""}` : "Все разовые тренировки оплачены"}
+              </span>
+            </span>
+            <ChevronRight size={18} className="text-faint" />
+          </Link>
           <Card title="Сегодня">
             <SessionList sessions={today} href={(id) => `/trainer/sessions/${id}`} empty="Сегодня занятий нет" showClient />
           </Card>

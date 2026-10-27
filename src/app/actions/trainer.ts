@@ -7,6 +7,7 @@ import { requireTrainer } from "@/server/auth";
 import { formObject, handle, jsonField, type FormState } from "@/server/action";
 import { trainerProfileSchema } from "@/lib/validation";
 import * as clients from "@/server/services/clients";
+import { issueInvite } from "@/server/services/invites";
 import * as exercises from "@/server/services/exercises";
 import * as programs from "@/server/services/programs";
 
@@ -42,6 +43,15 @@ export async function updateClientProfileAction(clientId: string, _: FormState, 
     await clients.updateClientProfile(actor, clientId, formObject(fd));
     refresh();
     return "Профиль клиента сохранён";
+  });
+}
+
+export async function issueInviteAction(clientId: string, _: FormState): Promise<FormState> {
+  return handle(async () => {
+    const { actor } = await requireTrainer();
+    await issueInvite(actor, clientId);
+    refresh();
+    return "Новая ссылка готова — отправьте её клиенту";
   });
 }
 

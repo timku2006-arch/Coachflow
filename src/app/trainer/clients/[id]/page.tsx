@@ -23,11 +23,14 @@ import { PushStatus } from "@/components/push-status";
 import { FeedbackView } from "@/components/feedback";
 import { clientHasPush, listFeedback } from "@/server/services/feedback";
 import { TabStrip } from "@/components/tab-strip";
-import { addClientNoteAction, deleteClientAction, deleteClientNoteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
+import { addClientNoteAction, deleteClientAction, deleteClientNoteAction, issueInviteAction, setNutritionAction, updateClientProfileAction } from "@/app/actions/trainer";
+import { InviteLink } from "@/components/invite-link";
+import { SinglePayments } from "@/components/payments";
+import { clientBalance } from "@/server/services/payments";
 
 const TABS = [
   ["overview", "Профиль"],
-  ["membership", "Абонемент"],
+  ["membership", "Оплата"],
   ["programs", "Программы"],
   ["schedule", "Записи"],
   ["history", "История"],
@@ -42,6 +45,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
   const tab: Tab = (TABS.find(([k]) => k === sp.tab)?.[0] ?? "overview") as Tab;
   const client = await orNotFound(getClient(actor, id));
   const hasPush = await clientHasPush(actor, id);
+  const invite = client.user.inviteToken && client.user.inviteExpiresAt && client.user.inviteExpiresAt > new Date() ? client.user : null;
 
   return (
     <>
@@ -56,7 +60,9 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
         }
         action={<LinkButton href={`/trainer/schedule?client=${id}`} variant="secondary">+ Запись</LinkButton>} />
       {sp.created && (
-        <Notice>Клиент создан. Передайте ему email и временный пароль — при первом входе он задаст свой.</Notice>
+        <Notice>
+          {client.user.inviteToken ? "Клиент создан. Отправьте ему ссылку ниже — он сам придумает пароль." : "Клиент создан. Передайте ему email и временный пароль — при первом входе он задаст свой."}
+        </Notice>
       )}
       <TabStrip label="Разделы карточки клиента">
         <ul className="inline-flex rounded-full bg-surface p-1">
@@ -77,8 +83,13 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
         </ul>
       </TabStrip>
 
+      {tab === "overview" && invite && (
+        <Card title="Ссылка для входа" className="mb-5">
+          <InviteLink token={invite.inviteToken!} name={client.user.name} until={formatDateTime(invite.inviteExpiresAt!)} />
+        </Card>
+      )}
       {tab === "overview" && <OverviewExtras />}
-      {tab === "membership" && <MembershipManager actor={actor} clientId={id} />}
+      {tab === "membership" && <PaymentTab />}
 
       {tab === "overview" && (
         <div className="stagger mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -144,9 +155,18 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
               ))}
             </ul>
           </Card>
+          <Card title="Вход в приложение" className="md:col-span-2">
+            <p className="mb-3 text-[15px] text-muted">
+              Логин: <span className="font-semibold text-ink-2">{client.user.email}</span>.{" "}
+              {invite ? "Ссылка для входа отправлена выше и ещё не использована." : "Если клиент забыл пароль или не может войти — создайте новую ссылку и отправьте ему. Он задаст новый пароль."}
+            </p>
+            <ActionForm action={issueInviteAction.bind(null, id)} confirm={invite ? "Создать новую ссылку? Старая перестанет работать." : undefined}>
+              <SubmitButton variant="secondary">{invite ? "Создать новую ссылку" : "Ссылка для входа"}</SubmitButton>
+            </ActionForm>
+          </Card>
           <Card title="Удаление" className="md:col-span-2">
             <p className="mb-3 text-[15px] text-muted">
-              Вход: <span className="font-semibold text-ink-2">{client.user.email}</span>. Если клиент ушёл или аккаунт создан с ошибкой, его можно удалить. Вместе с ним
+              Если клиент ушёл или аккаунт создан с ошибкой, его можно удалить. Вместе с ним
               удалятся все записи, результаты, программы, замеры и абонементы. Отменить это нельзя.
             </p>
             <ActionForm
@@ -172,6 +192,29 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
       )}
     </>
   );
+
+  async function PaymentTab() {
+    const balance = await clientBalance(actor, id);
+    return (
+      <div className="space-y-5">
+        {balance.count > 0 && (
+          <Card title="Разовые тренировки — к оплате">
+            <SinglePayments clientId={id} sessions={balance.sessions} total={balance.total} />
+            {balance.price === null && (
+              <p className="mt-3 text-[13px] text-muted">
+                Чтобы видеть сумму, укажите цену тренировки на странице{" "}
+                <Link href="/trainer/payments" className="font-semibold text-mint">
+                  «Оплаты»
+                </Link>
+                .
+              </p>
+            )}
+          </Card>
+        )}
+        <MembershipManager actor={actor} clientId={id} />
+      </div>
+    );
+  }
 
   async function OverviewExtras() {
     const period = sp.summary === "month" ? "month" : "week";

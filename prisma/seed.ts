@@ -40,7 +40,7 @@ async function main() {
       name: "Алексей Тренер",
       role: "TRAINER",
       passwordHash: await bcrypt.hash(TRAINER_PASSWORD, 10),
-      trainerProfile: { create: { telegramUsername: "coachflow_trainer" } },
+      trainerProfile: { create: { telegramUsername: "coachflow_trainer", sessionPriceRub: 2000 } },
     },
     include: { trainerProfile: true },
   });
@@ -197,6 +197,15 @@ async function main() {
   await session(ivan.id, at(3, "19:00"));
   await session(ivan.id, at(6, "12:00"));
 
+  // Разовые тренировки: Иван платит за проведённые раз в неделю — две последние ждут оплаты.
+  // Остальная история оплачена (у Анны — абонемент).
+  const done = await prisma.session.findMany({ where: { status: "COMPLETED" }, orderBy: { startsAt: "desc" }, select: { id: true, clientId: true, startsAt: true } });
+  let ivanUnpaid = 0;
+  for (const s of done) {
+    const unpaid = s.clientId === ivan.id && ivanUnpaid++ < 2;
+    await prisma.session.update({ where: { id: s.id }, data: unpaid ? {} : { paidAt: s.startsAt, paidRub: 2000 } });
+  }
+
   // Замеры Анны: раз в 3 недели
   for (const [k, weeksAgo] of [6, 3, 0].entries()) {
     const date = dateOnly(moscowDateString(addMoscowDays(new Date(), -weeksAgo * 7)));
@@ -205,18 +214,12 @@ async function main() {
     });
   }
 
-  // Абонементы: у Анны заканчивается (видно напоминание «Пора продлить»), у Ивана свежий
+  // Абонемент у Анны заканчивается (видно напоминание «Пора продлить»); Иван платит разово
   const today = (offset: number) => dateOnly(moscowDateString(addMoscowDays(new Date(), offset)));
   await prisma.membership.create({
     data: {
       clientId: anna.id, totalSessions: 8, remainingSessions: 2, validFrom: today(-25), validUntil: today(5), paidAt: new Date(), priceRub: 16000,
       entries: { create: { delta: 8, reason: "manual", note: "Новый абонемент", createdById: trainerUser.id } },
-    },
-  });
-  await prisma.membership.create({
-    data: {
-      clientId: ivan.id, totalSessions: 12, remainingSessions: 9, validFrom: today(-10), validUntil: today(50), priceRub: 22000,
-      entries: { create: { delta: 12, reason: "manual", note: "Новый абонемент", createdById: trainerUser.id } },
     },
   });
 
